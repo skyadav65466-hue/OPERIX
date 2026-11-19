@@ -1,0 +1,3886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#040911">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="SurgiVerse VR — Next-Generation Virtual Reality Medical Anatomy and Surgical Education Simulator for Meta Quest 3S and Desktop">
+  <title>SurgiVerse VR | Advanced Surgical Simulation & 3D Anatomy Lab</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- A-Frame 1.6.0 (High performance WebXR, Quest 3S Touch Plus support) -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       SURGIVERSE VR — DESIGN SYSTEM & CYBER-MEDICAL THEME
+       ========================================================================== */
+    :root {
+      --bg-dark: #040911;
+      --bg-card: rgba(8, 22, 38, 0.88);
+      --bg-glass: rgba(10, 28, 48, 0.72);
+      --bg-glass-elevated: rgba(13, 36, 62, 0.88);
+      --border-subtle: rgba(0, 240, 255, 0.16);
+      --border-bright: rgba(0, 240, 255, 0.48);
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.35);
+      --blue: #0088ff;
+      --blue-deep: #0044aa;
+      --emerald: #00e699;
+      --emerald-glow: rgba(0, 230, 153, 0.35);
+      --coral: #ff4757;
+      --amber: #ffa502;
+      --purple: #9b51e0;
+      --text-primary: #f0f7fc;
+      --text-secondary: #94b0c7;
+      --text-muted: #5e7a92;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+      --shadow-glass: 0 16px 40px -10px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(0, 240, 255, 0.15);
+      --shadow-neon: 0 0 20px rgba(0, 240, 255, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* 3D Viewport container */
+    #vr-scene-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    a-scene {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* 2D HUD UI Overlay Layer */
+    #hud-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Glassmorphism styling */
+    .glass-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-glass);
+      color: var(--text-primary);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-panel:hover {
+      border-color: var(--border-bright);
+    }
+
+    /* TOP TELEMETRY BAR */
+    #top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      margin: 12px 16px 0 16px;
+      border-radius: var(--radius-lg);
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00f0ff, #0055ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px var(--cyan-glow);
+    }
+
+    .brand-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #ffffff;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title span {
+      color: var(--cyan);
+    }
+
+    .brand-subtitle {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    /* Vitals Telemetry strip */
+    .vitals-strip {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 6px 16px;
+      background: rgba(4, 14, 25, 0.7);
+      border: 1px solid rgba(0, 240, 255, 0.12);
+      border-radius: var(--radius-full);
+      font-family: var(--font-mono);
+    }
+
+    .vital-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .vital-item .vital-label {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    .vital-item .vital-val {
+      font-weight: 600;
+      color: var(--emerald);
+    }
+
+    .vital-item.ecg-wave {
+      width: 80px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    #ecg-canvas-mini {
+      width: 100%;
+      height: 100%;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulseAnim 1.2s infinite;
+    }
+
+    @keyframes pulseAnim {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.6; }
+    }
+
+    /* Top right controls */
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: rgba(14, 34, 56, 0.8);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .badge-quest {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, rgba(0, 136, 255, 0.2), rgba(0, 240, 255, 0.2));
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+    }
+
+    /* MAIN WORKSPACE BODY */
+    #workspace-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 12px 16px;
+      flex: 1;
+      overflow: hidden;
+      gap: 14px;
+    }
+
+    /* LEFT SIDEBAR NAVIGATION DRAWER */
+    #left-sidebar {
+      width: 320px;
+      max-height: calc(100vh - 165px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .tab-nav-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .tab-nav-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      padding: 7px 12px;
+      background: rgba(12, 30, 50, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tab-btn:hover {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 136, 255, 0.25));
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+    }
+
+    .sidebar-content {
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .sidebar-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.25);
+      border-radius: 4px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-family: var(--font-display);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .organ-list-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .organ-chip {
+      padding: 8px 10px;
+      background: rgba(14, 32, 52, 0.65);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .organ-chip:hover {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    .organ-chip.active {
+      background: rgba(0, 240, 255, 0.22);
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .organ-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .organ-chip-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Environment switcher cards */
+    .env-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: rgba(12, 30, 50, 0.65);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .env-card:hover {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: var(--cyan);
+    }
+
+    .env-card.active {
+      border-color: var(--cyan);
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(0, 100, 220, 0.2));
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    }
+
+    .env-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .env-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .env-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .env-badge {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan);
+    }
+
+    /* RIGHT INSPECTOR PANEL */
+    #right-inspector {
+      width: 340px;
+      max-height: calc(100vh - 165px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .inspector-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .inspector-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .inspector-system-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .inspector-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .inspector-content {
+      padding: 16px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      font-size: 12px;
+    }
+
+    .inspector-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .inspector-content::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.25);
+      border-radius: 4px;
+    }
+
+    .detail-card {
+      background: rgba(6, 17, 30, 0.6);
+      border: 1px solid rgba(0, 240, 255, 0.1);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-card-label {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .detail-card-val {
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .btn-action-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 9px 12px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 136, 255, 0.2));
+      border: 1px solid var(--cyan);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.35), rgba(0, 136, 255, 0.35));
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-action.secondary {
+      background: rgba(14, 34, 56, 0.6);
+      border-color: var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .btn-action.secondary:hover {
+      border-color: var(--border-bright);
+      color: var(--text-primary);
+    }
+
+    /* BOTTOM CONTROLS DOCK */
+    #bottom-dock {
+      margin: 0 16px 14px 16px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: var(--radius-lg);
+      gap: 16px;
+    }
+
+    .layer-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .layer-btn {
+      padding: 6px 12px;
+      background: rgba(10, 26, 44, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .layer-btn:hover {
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--text-primary);
+    }
+
+    .layer-btn.active {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(6, 17, 30, 0.7);
+      padding: 6px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+
+    .slider-group input[type="range"] {
+      -webkit-appearance: none;
+      width: 100px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .slider-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--cyan);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    .view-presets-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-btn {
+      padding: 6px 10px;
+      background: rgba(10, 26, 44, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* SURGICAL PROCEDURE INTERFACE */
+    .module-card {
+      background: rgba(8, 22, 38, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .module-card:hover {
+      background: rgba(0, 240, 255, 0.1);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    .module-card.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 100, 220, 0.2));
+      border-color: var(--cyan);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.2);
+    }
+
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .module-badge {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan);
+    }
+
+    .module-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .step-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(6, 17, 30, 0.6);
+      border: 1px solid rgba(0, 240, 255, 0.1);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+
+    .step-item.active {
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.12);
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0, 240, 255, 0.2);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .step-item.completed .step-num {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      color: #040911;
+    }
+
+    .step-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .step-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .step-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* AI ASSISTANT CHAT STYLES */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 380px;
+      gap: 10px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .msg-bubble {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      line-height: 1.5;
+      max-width: 90%;
+    }
+
+    .msg-ai {
+      background: rgba(14, 34, 56, 0.75);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      color: var(--text-primary);
+      align-self: flex-start;
+      border-left: 3px solid var(--cyan);
+    }
+
+    .msg-user {
+      background: linear-gradient(135deg, rgba(0, 100, 220, 0.4), rgba(0, 240, 255, 0.2));
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      align-self: flex-end;
+    }
+
+    .prompt-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .chip-prompt {
+      padding: 4px 8px;
+      background: rgba(10, 26, 44, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      color: var(--cyan);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip-prompt:hover {
+      background: rgba(0, 240, 255, 0.18);
+      border-color: var(--cyan);
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(6, 17, 30, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .chat-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-send {
+      padding: 0 14px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #040911;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-send:hover {
+      box-shadow: 0 0 12px var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    /* QUIZ STYLES */
+    .quiz-question-box {
+      background: rgba(6, 17, 30, 0.7);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .quiz-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quiz-option-btn {
+      padding: 10px 14px;
+      background: rgba(14, 34, 56, 0.65);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .quiz-option-btn:hover {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: var(--cyan);
+      color: var(--text-primary);
+    }
+
+    .quiz-option-btn.correct {
+      background: rgba(0, 230, 153, 0.25) !important;
+      border-color: var(--emerald) !important;
+      color: #70ffcf !important;
+    }
+
+    .quiz-option-btn.wrong {
+      background: rgba(255, 71, 87, 0.25) !important;
+      border-color: var(--coral) !important;
+      color: #ff8591 !important;
+    }
+
+    /* MODAL OVERLAYS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(3, 8, 16, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      width: 100%;
+      max-width: 600px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 240, 255, 0.2);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .btn-close-modal {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-close-modal:hover {
+      background: rgba(255, 71, 87, 0.3);
+      color: #ffffff;
+    }
+
+    /* Quest 3S Controller Guide Cards */
+    .controller-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .controller-box {
+      background: rgba(6, 17, 30, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .controller-box-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-mapping {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+    }
+
+    .ctrl-key {
+      font-family: var(--font-mono);
+      color: var(--cyan);
+    }
+
+    .ctrl-desc {
+      color: var(--text-secondary);
+    }
+
+    /* Toast notification */
+    #toast-notification {
+      position: fixed;
+      top: 85px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      z-index: 1000;
+      padding: 10px 20px;
+      background: rgba(6, 26, 44, 0.95);
+      border: 1px solid var(--cyan);
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: var(--font-sans);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--cyan-glow);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #toast-notification.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Floating In-VR Reticle / Desktop Helper */
+    .desktop-hint {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 14px;
+      background: rgba(4, 14, 25, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      pointer-events: none;
+      letter-spacing: 0.5px;
+    }
+
+    /* Responsive Mobile / Small Screen Adjustments */
+    @media (max-width: 900px) {
+      #left-sidebar {
+        width: 270px;
+      }
+      #right-inspector {
+        width: 280px;
+      }
+      .vitals-strip {
+        display: none;
+      }
+    }
+
+    @media (max-width: 680px) {
+      #left-sidebar, #right-inspector {
+        position: fixed;
+        bottom: 80px;
+        width: calc(100vw - 32px);
+        max-height: 40vh;
+      }
+      #right-inspector {
+        display: none;
+      }
+      #bottom-dock {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       3D A-FRAME WEBXR SCENE
+       ========================================================================== -->
+  <div id="vr-scene-container">
+    <a-scene
+      id="mainScene"
+      embedded="false"
+      renderer="antialias: true; colorManagement: true; foveationLevel: 2; highRefreshRate: true; precision: mediump;"
+      vr-mode-ui="enabled: true; enterVRButton: #btnEnterVR;"
+      loading-screen="dotsColor: #00f0ff; backgroundColor: #040911;">
+
+      <!-- ASSETS DECLARATION -->
+      <a-assets timeout="4000">
+        <!-- Procedural canvas textures & mixins -->
+        <canvas id="ecgTextureCanvas" width="512" height="256"></canvas>
+      </a-assets>
+
+      <!-- LIGHTING RIG -->
+      <a-entity id="lightingGroup">
+        <!-- Ambient clinical illumination -->
+        <a-light type="ambient" color="#8bc0df" intensity="0.65"></a-light>
+        <!-- Key directional light -->
+        <a-light type="directional" color="#ffffff" intensity="0.8" position="3 6 4" cast-shadow="false"></a-light>
+        <!-- Surgical Spotlights overhead -->
+        <a-entity id="surgicalLampSpot1" position="0 3.2 -0.8">
+          <a-light type="spot" color="#f0fbff" intensity="2.8" angle="38" penumbra="0.3" distance="6" target="#anatomyRoot"></a-light>
+        </a-entity>
+        <a-entity id="surgicalLampSpot2" position="0.8 3.2 -0.3">
+          <a-light type="spot" color="#d4f7ff" intensity="2.2" angle="35" penumbra="0.4" distance="6" target="#anatomyRoot"></a-light>
+        </a-entity>
+      </a-entity>
+
+      <!-- CAMERA RIG WITH META QUEST 3S TOUCH PLUS CONTROLLER SUPPORT & DESKTOP FALLBACK -->
+      <a-entity id="cameraRig" position="0 1.6 1.8" movement-controls="fly: false; speed: 0.15">
+        <a-camera
+          id="mainCamera"
+          look-controls="pointerLockEnabled: false"
+          wasd-controls="acceleration: 25"
+          position="0 0 0">
+          <!-- Desktop Mouse Cursor Raycaster -->
+          <a-entity
+            id="mouseCursor"
+            cursor="rayOrigin: mouse; fuse: false"
+            raycaster="objects: .clickable, .grabbable; far: 25">
+          </a-entity>
+        </a-camera>
+
+        <!-- META QUEST 3S LEFT CONTROLLER -->
+        <a-entity
+          id="leftHand"
+          laser-controls="hand: left"
+          raycaster="objects: .clickable, .grabbable; far: 8; showLine: true; lineColor: #00f0ff; lineOpacity: 0.8"
+          cursor="downEvents: triggerdown; upEvents: triggerup"
+          quest-controller-interaction="hand: left">
+          <!-- Controller Palm Glow -->
+          <a-sphere radius="0.015" color="#00f0ff" material="emissive: #00f0ff; emissiveIntensity: 0.6; opacity: 0.7"></a-sphere>
+        </a-entity>
+
+        <!-- META QUEST 3S RIGHT CONTROLLER -->
+        <a-entity
+          id="rightHand"
+          laser-controls="hand: right"
+          raycaster="objects: .clickable, .grabbable; far: 8; showLine: true; lineColor: #00f0ff; lineOpacity: 0.8"
+          cursor="downEvents: triggerdown; upEvents: triggerup"
+          quest-controller-interaction="hand: right">
+          <!-- Controller Palm Glow -->
+          <a-sphere radius="0.015" color="#00f0ff" material="emissive: #00f0ff; emissiveIntensity: 0.6; opacity: 0.7"></a-sphere>
+        </a-entity>
+      </a-entity>
+
+      <!-- FLOATING IN-VR INTERACTIVE 3D MENU TABLET -->
+      <a-entity id="vrTabletAnchor" position="-0.9 1.3 -0.5" rotation="0 35 0">
+        <!-- Tablet Frame -->
+        <a-box width="0.72" height="0.48" depth="0.02" color="#081626" material="metalness: 0.8; roughness: 0.2">
+          <!-- Border frame neon -->
+          <a-plane position="0 0 0.011" width="0.70" height="0.46" color="#00f0ff" material="opacity: 0.25; transparent: true"></a-plane>
+          <!-- Display Screen -->
+          <a-plane position="0 0 0.012" width="0.68" height="0.44" color="#05101d">
+            <a-text value="SURGIVERSE VR" position="-0.3 0.17 0.005" width="0.9" color="#00f0ff" font="dejavu"></a-text>
+            <a-text id="vrTabletStatusText" value="Active: Operating Room" position="-0.3 0.13 0.005" width="0.6" color="#94b0c7"></a-text>
+
+            <!-- Quick VR Action Buttons -->
+            <a-plane class="clickable" id="vrBtnAnatomy" position="-0.16 0.05 0.008" width="0.28" height="0.07" color="#0d2847" material="opacity: 0.9">
+              <a-text value="3D Anatomy" align="center" width="0.7" color="#f0f7fc"></a-text>
+            </a-plane>
+
+            <a-plane class="clickable" id="vrBtnOR" position="0.16 0.05 0.008" width="0.28" height="0.07" color="#0d2847" material="opacity: 0.9">
+              <a-text value="Operating Room" align="center" width="0.7" color="#f0f7fc"></a-text>
+            </a-plane>
+
+            <a-plane class="clickable" id="vrBtnSurgery" position="-0.16 -0.04 0.008" width="0.28" height="0.07" color="#0d2847" material="opacity: 0.9">
+              <a-text value="Surgery Modules" align="center" width="0.7" color="#f0f7fc"></a-text>
+            </a-plane>
+
+            <a-plane class="clickable" id="vrBtnXRay" position="0.16 -0.04 0.008" width="0.28" height="0.07" color="#0d2847" material="opacity: 0.9">
+              <a-text value="Toggle X-Ray" align="center" width="0.7" color="#00e699"></a-text>
+            </a-plane>
+
+            <a-plane class="clickable" id="vrBtnReset" position="0 -0.13 0.008" width="0.4" height="0.06" color="#183659">
+              <a-text value="Reset Model Orientation" align="center" width="0.65" color="#00f0ff"></a-text>
+            </a-plane>
+          </a-plane>
+        </a-box>
+      </a-entity>
+
+      <!-- 3D ANATOMY ROOT ENTITY (Interactive, Rotatable, Scalable) -->
+      <a-entity
+        id="anatomyRoot"
+        class="clickable"
+        position="0 1.05 -0.8"
+        rotation="0 0 0"
+        human-anatomy-system>
+      </a-entity>
+
+      <!-- OPERATING ROOM ENVIRONMENT (Table, Drapes, Monitors, Anesthesia Cart, Trolley) -->
+      <a-entity id="environmentOR" or-environment visible="true"></a-entity>
+
+      <!-- HOLODECK ANATOMY CHAMBER ENVIRONMENT -->
+      <a-entity id="environmentHolodeck" holodeck-environment visible="false"></a-entity>
+
+      <!-- RADIOLOGY / IMAGING SUITE ENVIRONMENT -->
+      <a-entity id="environmentRadiology" radiology-environment visible="false"></a-entity>
+
+      <!-- ORGAN SHOWCASE SPECIMEN POD ENVIRONMENT -->
+      <a-entity id="environmentPod" pod-environment visible="false"></a-entity>
+
+      <!-- SURGICAL THEATRE AUDITORIUM ENVIRONMENT -->
+      <a-entity id="environmentTheatre" theatre-environment visible="false"></a-entity>
+
+      <!-- MAYO STAND WITH INTERACTIVE SURGICAL INSTRUMENTS -->
+      <a-entity id="mayoStandGroup" class="clickable grabbable" position="0.85 0.95 -0.7" rotation="0 -30 0" surgical-instruments-tray></a-entity>
+
+      <!-- BACKGROUND ENVIRONMENT SKYBOX -->
+      <a-sky id="sceneSky" color="#060e18"></a-sky>
+
+    </a-scene>
+  </div>
+
+  <!-- ==========================================================================
+       2D HUD & USER INTERFACE OVERLAY
+       ========================================================================== -->
+  <div id="hud-layer">
+
+    <!-- TOP TELEMETRY BAR -->
+    <header id="top-bar" class="glass-panel interactive">
+      <div class="brand-section">
+        <div class="brand-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M19 10.5V8.8C19 6.7 17.3 5 15.2 5H8.8C6.7 5 5 6.7 5 8.8V15.2C5 17.3 6.7 19 8.8 19H10.5M19 15.5V19H15.5M19 19L14 14M9 9H15V15H9V9Z"/></svg>
+        </div>
+        <div>
+          <div class="brand-title">SURGI<span>VERSE</span> VR</div>
+          <div class="brand-subtitle">Clinical Simulation Lab • Quest 3S</div>
+        </div>
+      </div>
+
+      <!-- Live Vitals Monitoring Strip -->
+      <div class="vitals-strip">
+        <div class="vital-item">
+          <div class="pulse-dot"></div>
+          <span class="vital-label">HR</span>
+          <span class="vital-val" id="telemetryHR">72</span>
+          <span style="font-size: 9px; color: var(--text-muted);">BPM</span>
+        </div>
+        <div class="vital-item ecg-wave">
+          <canvas id="ecg-canvas-mini" width="100" height="24"></canvas>
+        </div>
+        <div class="vital-item">
+          <span class="vital-label">SpO2</span>
+          <span class="vital-val" style="color: var(--cyan);" id="telemetrySpO2">99%</span>
+        </div>
+        <div class="vital-item">
+          <span class="vital-label">BP</span>
+          <span class="vital-val" style="color: #ffaa00;" id="telemetryBP">120/80</span>
+        </div>
+        <div class="vital-item">
+          <span class="vital-label">SIM TIME</span>
+          <span class="vital-val" style="color: var(--text-primary);" id="telemetryTime">00:00</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="top-controls">
+        <button id="btnEnterVR" class="badge-quest" title="Enter WebXR Immersive VR on Meta Quest 3S" style="cursor: pointer; background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 136, 255, 0.3)); border-color: var(--cyan); transition: all 0.2s;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v2H6v-2H4v-2h2V9h2v2h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+          <span id="vrStatusText">ENTER VR</span>
+        </button>
+
+        <button class="btn-icon" id="btnSoundToggle" title="Toggle Clinical Audio">
+          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+
+        <button class="btn-icon" id="btnHelp" title="Controller Guide & Hotkeys">
+          <svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+        </button>
+
+        <button class="btn-icon" id="btnDisclaimer" title="Medical Safety & Educational Notice">
+          <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE WORKSPACE -->
+    <div id="workspace-container">
+
+      <!-- LEFT SIDEBAR DRAWER -->
+      <aside id="left-sidebar" class="glass-panel interactive">
+        <div class="sidebar-header">
+          <div class="tab-nav-row">
+            <button class="tab-btn active" data-tab="anatomy">🧬 Anatomy</button>
+            <button class="tab-btn" data-tab="environment">🏥 Envs</button>
+            <button class="tab-btn" data-tab="procedures">🔬 Surgery</button>
+            <button class="tab-btn" data-tab="tools">🛠️ Tools</button>
+            <button class="tab-btn" data-tab="ai">🤖 AI Tutor</button>
+            <button class="tab-btn" data-tab="quiz">📋 Quiz</button>
+            <button class="tab-btn" data-tab="progress">📊 Progress</button>
+          </div>
+        </div>
+
+        <div class="sidebar-content">
+
+          <!-- TAB 1: 3D ANATOMY EXPLORER -->
+          <div id="tab-anatomy" class="tab-pane">
+            <div class="nav-section-title">
+              <span>Primary Organs</span>
+              <span style="font-family: var(--font-mono); color: var(--cyan);">10 STRUCTURES</span>
+            </div>
+            <div class="organ-list-grid">
+              <div class="organ-chip active" data-organ="heart">
+                <div class="organ-indicator" style="background: #ff2a4d;"></div>
+                <div class="organ-chip-name">Heart</div>
+              </div>
+              <div class="organ-chip" data-organ="lungs">
+                <div class="organ-indicator" style="background: #ffa8b8;"></div>
+                <div class="organ-chip-name">Lungs</div>
+              </div>
+              <div class="organ-chip" data-organ="brain">
+                <div class="organ-indicator" style="background: #e49ab0;"></div>
+                <div class="organ-chip-name">Brain</div>
+              </div>
+              <div class="organ-chip" data-organ="liver">
+                <div class="organ-indicator" style="background: #873e23;"></div>
+                <div class="organ-chip-name">Liver</div>
+              </div>
+              <div class="organ-chip" data-organ="stomach">
+                <div class="organ-indicator" style="background: #cf8438;"></div>
+                <div class="organ-chip-name">Stomach</div>
+              </div>
+              <div class="organ-chip" data-organ="kidneys">
+                <div class="organ-indicator" style="background: #731e24;"></div>
+                <div class="organ-chip-name">Kidneys</div>
+              </div>
+              <div class="organ-chip" data-organ="pancreas">
+                <div class="organ-indicator" style="background: #e6b438;"></div>
+                <div class="organ-chip-name">Pancreas</div>
+              </div>
+              <div class="organ-chip" data-organ="spleen">
+                <div class="organ-indicator" style="background: #5b2c4e;"></div>
+                <div class="organ-chip-name">Spleen</div>
+              </div>
+              <div class="organ-chip" data-organ="intestines">
+                <div class="organ-indicator" style="background: #d49866;"></div>
+                <div class="organ-chip-name">Intestines</div>
+              </div>
+              <div class="organ-chip" data-organ="bladder">
+                <div class="organ-indicator" style="background: #d4aa7d;"></div>
+                <div class="organ-chip-name">Bladder</div>
+              </div>
+            </div>
+
+            <div class="nav-section-title" style="margin-top: 14px;">
+              <span>Systems & Structures</span>
+            </div>
+            <div class="detail-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+                <span>Skeletal Framework</span>
+                <span class="organ-chip-name" style="color: #e5dbcb;">Skull, Spine, Ribs, Pelvis</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-top: 4px;">
+                <span>Circulatory Tree</span>
+                <span class="organ-chip-name" style="color: #ff3366;">Aorta, Vena Cava</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-top: 4px;">
+                <span>Nervous System</span>
+                <span class="organ-chip-name" style="color: #ffcc00;">Spinal Cord & Plexuses</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: ENVIRONMENTS -->
+          <div id="tab-environment" class="tab-pane" style="display: none;">
+            <div class="nav-section-title">
+              <span>Simulation Theatres</span>
+              <span class="env-badge">5 LABS</span>
+            </div>
+
+            <div class="env-card active" data-env="or">
+              <div class="env-info">
+                <div class="env-title">Virtual Operating Room</div>
+                <div class="env-desc">Operating table, dual lights, vitals monitors & trolley</div>
+              </div>
+              <span class="env-badge">PRIMARY</span>
+            </div>
+
+            <div class="env-card" data-env="holodeck">
+              <div class="env-info">
+                <div class="env-title">Anatomy Holodeck</div>
+                <div class="env-desc">Futuristic cyber chamber with glowing grid matrix</div>
+              </div>
+              <span class="env-badge">STUDY</span>
+            </div>
+
+            <div class="env-card" data-env="radiology">
+              <div class="env-info">
+                <div class="env-title">Medical Imaging Suite</div>
+                <div class="env-desc">CT / MRI illuminated lightbox and radiological scans</div>
+              </div>
+              <span class="env-badge">DIAGNOSTIC</span>
+            </div>
+
+            <div class="env-card" data-env="pod">
+              <div class="env-info">
+                <div class="env-title">Organ Showcase Pod</div>
+                <div class="env-desc">Specimen isolation turntable with high-power focus</div>
+              </div>
+              <span class="env-badge">MACRO</span>
+            </div>
+
+            <div class="env-card" data-env="theatre">
+              <div class="env-info">
+                <div class="env-title">Surgical Amphitheatre</div>
+                <div class="env-desc">Tiered observation auditorium & lecture screen</div>
+              </div>
+              <span class="env-badge">ACADEMIC</span>
+            </div>
+          </div>
+
+          <!-- TAB 3: SURGICAL PROCEDURES -->
+          <div id="tab-procedures" class="tab-pane" style="display: none;">
+            <div class="nav-section-title">
+              <span>Specialty Simulations</span>
+              <span class="module-badge">6 MODULES</span>
+            </div>
+
+            <div class="module-card active" data-module="cabg">
+              <div class="module-header">
+                <span class="module-badge" style="color: #ff3366; background: rgba(255, 51, 102, 0.15);">CARDIAC</span>
+                <span style="font-size: 10px; color: var(--emerald);">Step 1/5</span>
+              </div>
+              <div class="module-title">Coronary Artery Bypass (CABG)</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Median sternotomy & saphenous graft anastomosis</div>
+            </div>
+
+            <div class="module-card" data-module="craniotomy">
+              <div class="module-header">
+                <span class="module-badge" style="color: #9b51e0; background: rgba(155, 81, 224, 0.15);">NEUROSURGERY</span>
+                <span style="font-size: 10px; color: var(--text-muted);">5 Steps</span>
+              </div>
+              <div class="module-title">Pterional Craniotomy</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Trephination, bone flap & dural flap elevation</div>
+            </div>
+
+            <div class="module-card" data-module="ortho">
+              <div class="module-header">
+                <span class="module-badge" style="color: #00e699; background: rgba(0, 230, 153, 0.15);">ORTHOPEDIC</span>
+                <span style="font-size: 10px; color: var(--text-muted);">5 Steps</span>
+              </div>
+              <div class="module-title">Total Knee Arthroplasty</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Femoral resection & prosthetic trial balancing</div>
+            </div>
+
+            <div class="module-card" data-module="laparoscopic">
+              <div class="module-header">
+                <span class="module-badge" style="color: var(--cyan); background: rgba(0, 240, 255, 0.15);">LAPAROSCOPY</span>
+                <span style="font-size: 10px; color: var(--text-muted);">5 Steps</span>
+              </div>
+              <div class="module-title">Laparoscopic Cholecystectomy</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Trocar insertion & Calot's triangle dissection</div>
+            </div>
+
+            <div class="module-card" data-module="general">
+              <div class="module-header">
+                <span class="module-badge" style="color: #ffa502; background: rgba(255, 165, 2, 0.15);">GENERAL SURGERY</span>
+                <span style="font-size: 10px; color: var(--text-muted);">5 Steps</span>
+              </div>
+              <div class="module-title">Open Appendectomy</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">McBurney's incision & mesoappendix ligation</div>
+            </div>
+
+            <div class="module-card" data-module="ophthalmic">
+              <div class="module-header">
+                <span class="module-badge" style="color: #0088ff; background: rgba(0, 136, 255, 0.15);">OPHTHALMOLOGY</span>
+                <span style="font-size: 10px; color: var(--text-muted);">5 Steps</span>
+              </div>
+              <div class="module-title">Cataract Phacoemulsification</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Capsulorhexis, phaco & IOL delivery</div>
+            </div>
+          </div>
+
+          <!-- TAB 4: MEDICAL INSTRUMENTS -->
+          <div id="tab-tools" class="tab-pane" style="display: none;">
+            <div class="nav-section-title">
+              <span>Sterile Mayo Stand Tools</span>
+              <span class="module-badge">8 INSTRUMENTS</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+              Point with laser & press Grip to grab in VR, or click below to inspect.
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="scalpel" style="cursor:pointer;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Scalpel #10 Blade</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">INCISION</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Curved edge cutting blade for skin & subcutaneous incisions.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="scissors" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Metzenbaum Scissors</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">DISSECTION</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Delicate curved surgical scissors for fine soft-tissue planes.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="forceps" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">DeBakey Tissue Forceps</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">ATRAUMATIC</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Ribbed jaw design minimizing vessel wall damage.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="retractor" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Weitlaner Retractor</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">EXPOSURE</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Self-retaining ratchet prongs for wound exposure.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="needleholder" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Mayo-Hegar Needle Holder</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">SUTURING</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Cross-hatched carbide jaws grasping curved surgical needles.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="clamp" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Hemostatic Kelly Clamp</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">HEMOSTASIS</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Transversely serrated curved clamp for vascular occlusions.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="laparoscopic" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Maryland Dissector</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">MINIMAL ACCESS</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Long insulated shaft with fine curved grasping tips.</div>
+            </div>
+
+            <div class="detail-card tool-select-item" data-tool="suction" style="cursor:pointer; margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; color:var(--text-primary);">Yankauer Suction Cannula</span>
+                <span style="font-size:9px; color:var(--cyan); font-family:var(--font-mono);">ASPIRATION</span>
+              </div>
+              <div style="font-size:10px; color:var(--text-muted);">Bulbous head suction device for clearing blood & fluids.</div>
+            </div>
+          </div>
+
+          <!-- TAB 5: AI MEDICAL LEARNING ASSISTANT -->
+          <div id="tab-ai" class="tab-pane" style="display: none;">
+            <div class="nav-section-title">
+              <span>Dr. AI-Surg Instructor</span>
+              <span class="module-badge" style="color:var(--emerald);">ACTIVE</span>
+            </div>
+
+            <div class="prompt-suggestions">
+              <div class="chip-prompt" data-query="Explain CABG procedure steps">CABG Steps</div>
+              <div class="chip-prompt" data-query="Metzenbaum vs Mayo scissors">Scissors Diff</div>
+              <div class="chip-prompt" data-query="Layers of abdominal wall">Abdominal Layers</div>
+              <div class="chip-prompt" data-query="Functions of the human spleen">Spleen Roles</div>
+              <div class="chip-prompt" data-query="Pneumoperitoneum safety pressure">Lap Pressure</div>
+            </div>
+
+            <div class="chat-container">
+              <div class="chat-messages" id="chatMessages">
+                <div class="msg-bubble msg-ai">
+                  <strong>Dr. AI-Surg:</strong> Welcome to the SurgiVerse Clinical Lab. I am your educational mentor. Ask me any questions regarding human anatomy, surgical pathology, instrument handling, or procedural safety checklists.
+                </div>
+              </div>
+              <div class="chat-input-row">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask medical or surgical question...">
+                <button class="btn-send" id="btnSendChat">Ask</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 6: ANATOMY & SURGERY QUIZ -->
+          <div id="tab-quiz" class="tab-pane" style="display: none;">
+            <div class="nav-section-title">
+              <span>Interactive Knowledge Challenge</span>
+              <span id="quizScoreText" style="font-family:var(--font-mono); color:var(--emerald);">SCORE: 0/0</span>
+            </div>
+
+            <div id="quizContainer">
+              <div class="quiz-question-box" id="quizQuestion">
+                Loading clinical scenario...
+              </div>
+              <div class="quiz-options-list" id="quizOptions">
+                <!-- Dynamically rendered -->
+              </div>
+              <div id="quizExplanation" class="detail-card" style="display:none; margin-top:10px; border-left: 3px solid var(--emerald);">
+                <div class="detail-card-label">CLINICAL RATIONALE</div>
+                <div class="detail-card-val" id="quizExplanationText"></div>
+              </div>
+              <button class="btn-action" id="btnNextQuiz" style="margin-top:10px; display:none;">Next Question</button>
+            </div>
+          </div>
+
+          <!-- TAB 7: TRAINING PROGRESS & CERTIFICATE -->
+          <div id="tab-progress" class="tab-pane" style="display: none;">
+            <div class="nav-section-title">
+              <span>Resident Performance Metrics</span>
+            </div>
+
+            <div class="detail-card">
+              <div style="display:flex; justify-content:space-between;">
+                <span class="detail-card-label">SURGICAL RANK</span>
+                <span style="font-family:var(--font-mono); font-weight:600; color:var(--cyan);" id="userRankText">Junior Resident</span>
+              </div>
+              <div style="font-size:18px; font-family:var(--font-display); font-weight:700; color:var(--text-primary); margin-top:2px;" id="userXpText">
+                350 XP
+              </div>
+              <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-top:6px;">
+                <div id="xpProgressBar" style="width: 35%; height:100%; background:linear-gradient(90deg, var(--cyan), var(--emerald));"></div>
+              </div>
+            </div>
+
+            <div class="detail-card" style="margin-top:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px;">
+                <span>Organs Explored</span>
+                <span style="font-family:var(--font-mono); color:var(--emerald);" id="metricOrgans">8 / 10</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:4px;">
+                <span>Instruments Handled</span>
+                <span style="font-family:var(--font-mono); color:var(--cyan);" id="metricTools">6 / 8</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:4px;">
+                <span>Surgical Steps Completed</span>
+                <span style="font-family:var(--font-mono); color:var(--amber);" id="metricSteps">12 Steps</span>
+              </div>
+            </div>
+
+            <button class="btn-action" id="btnOpenCertificate" style="margin-top:14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+              View Simulation Certificate
+            </button>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- RIGHT CONTEXTUAL DETAIL INSPECTOR -->
+      <aside id="right-inspector" class="glass-panel interactive">
+        <div class="inspector-header">
+          <div class="inspector-title-group">
+            <span class="inspector-system-tag" id="inspectorCategory">CIRCULATORY SYSTEM</span>
+            <span class="inspector-title" id="inspectorTitle">Heart (Cor)</span>
+          </div>
+          <button class="btn-icon" id="btnAudioNarrate" title="Audio Narration (Web Speech)">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </button>
+        </div>
+
+        <div class="inspector-content" id="inspectorContent">
+          <!-- Dynamic details filled by JS -->
+          <div class="detail-card">
+            <div class="detail-card-label">Anatomical Location</div>
+            <div class="detail-card-val" id="inspectorLocation">Middle mediastinum, thoracic cavity, resting upon diaphragm, flanked by left and right pleural cavities.</div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-label">Physiological Function</div>
+            <div class="detail-card-val" id="inspectorFunction">Dual-pump muscular organ propelling oxygenated blood through systemic circulation and deoxygenated blood through pulmonary gas exchange.</div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-label">Structural Relationships</div>
+            <div class="detail-card-val" id="inspectorRelations">Enclosed by fibroserous pericardium; posterior to sternal body; anterior to thoracic esophagus and descending aorta.</div>
+          </div>
+
+          <div class="detail-card" style="border-left: 3px solid var(--cyan);">
+            <div class="detail-card-label" style="color: var(--cyan);">Educational Clinical Pearl</div>
+            <div class="detail-card-val" id="inspectorPearl">During Coronary Artery Bypass Grafting (CABG), the Left Anterior Descending (LAD) artery is commonly anastomosed with the Left Internal Mammary Artery (LIMA).</div>
+          </div>
+
+          <div class="btn-action-row">
+            <button class="btn-action" id="btnFocusStructure">Center View</button>
+            <button class="btn-action secondary" id="btnIsolateStructure">Isolate Organ</button>
+            <button class="btn-action secondary" id="btnResetToolPos" title="Return grabbed tool to tray">Reset Tool</button>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- BOTTOM CONTROL DOCK -->
+    <footer id="bottom-dock" class="glass-panel interactive">
+      <!-- Anatomical Layer Toggles -->
+      <div class="layer-controls-group">
+        <button class="layer-btn active" data-layer="skin">Skin</button>
+        <button class="layer-btn active" data-layer="muscle">Muscles</button>
+        <button class="layer-btn active" data-layer="skeleton">Skeleton</button>
+        <button class="layer-btn active" data-layer="organs">Organs</button>
+        <button class="layer-btn active" data-layer="vascular">Vessels</button>
+        <button class="layer-btn active" data-layer="nervous">Nerves</button>
+      </div>
+
+      <!-- Transparency / X-Ray Slider -->
+      <div class="slider-group">
+        <span>Skin Opacity</span>
+        <input type="range" id="sliderSkinOpacity" min="0" max="100" value="45">
+        <span id="labelSkinOpacity" style="color:var(--cyan); width:32px;">45%</span>
+      </div>
+
+      <!-- Quick Orientation Presets -->
+      <div class="view-presets-group">
+        <button class="preset-btn" data-preset="front">ANTERIOR</button>
+        <button class="preset-btn" data-preset="side">LATERAL</button>
+        <button class="preset-btn" data-preset="cardiac">CARDIAC</button>
+        <button class="preset-btn" data-preset="cranial">CRANIAL</button>
+        <button class="preset-btn" data-preset="reset" style="color:var(--cyan);">RESET</button>
+      </div>
+    </footer>
+
+    <!-- DESKTOP MOUSE / VR HELPER HINT -->
+    <div class="desktop-hint">
+      Desktop: Click & Drag to Orbit • Scroll to Zoom • Click Organs/Tools • Meta Quest 3S: Point laser & Pull Trigger / Grip
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--cyan)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      <span id="toastMsg">Action confirmed</span>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DIALOGS (HELP, DISCLAIMER, CERTIFICATE)
+       ========================================================================== -->
+
+  <!-- MODAL: QUEST 3S CONTROLLER & INTERACTION GUIDE -->
+  <div id="modalGuide" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">Meta Quest 3S Controller & Navigation Guide</div>
+        <button class="btn-close-modal" data-close="modalGuide">&times;</button>
+      </div>
+      <div>
+        <p style="color:var(--text-secondary); margin-bottom:14px; font-size:12px;">
+          SurgiVerse VR natively utilizes Meta Quest 3S Touch Plus left and right controllers with dual laser raycasters, grip-assisted tool grabbing, and spatial telemetry.
+        </p>
+
+        <div class="controller-grid">
+          <div class="controller-box">
+            <div class="controller-box-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Left Controller
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">Index Trigger</span>
+              <span class="ctrl-desc">Select UI buttons / Organ click</span>
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">Grip Button</span>
+              <span class="ctrl-desc">Grab surgical tool / specimen</span>
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">Analog Stick</span>
+              <span class="ctrl-desc">Smooth translate / teleport</span>
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">X / Y Buttons</span>
+              <span class="ctrl-desc">Toggle In-VR HUD tablet</span>
+            </div>
+          </div>
+
+          <div class="controller-box">
+            <div class="controller-box-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Right Controller
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">Index Trigger</span>
+              <span class="ctrl-desc">Perform surgical action / cut</span>
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">Grip Button</span>
+              <span class="ctrl-desc">Hold instrument / clamp vessel</span>
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">Analog Stick</span>
+              <span class="ctrl-desc">Snap turn camera rotation</span>
+            </div>
+            <div class="ctrl-mapping">
+              <span class="ctrl-key">A / B Buttons</span>
+              <span class="ctrl-desc">Confirm step / Reset position</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card" style="margin-top:14px;">
+          <div class="detail-card-label">Desktop Testing Controls</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+            • Mouse Click & Drag: Look around / rotate camera angle.<br>
+            • Mouse Scroll: Zoom in/out toward specimen.<br>
+            • Left Click: Select organs, grab surgical instruments, and click buttons.<br>
+            • WASD Keys: Move camera position forwards, backwards, left, and right.
+          </div>
+        </div>
+      </div>
+      <button class="btn-action" data-close="modalGuide">Close Guide</button>
+    </div>
+  </div>
+
+  <!-- MODAL: MEDICAL SAFETY & EDUCATION DISCLAIMER -->
+  <div id="modalDisclaimer" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title" style="color:var(--amber);">Medical Education Disclaimer</div>
+        <button class="btn-close-modal" data-close="modalDisclaimer">&times;</button>
+      </div>
+      <div style="font-size:12px; line-height:1.6; color:var(--text-secondary);">
+        <p style="margin-bottom:10px;">
+          <strong>Educational Simulation Purpose Only:</strong> The SurgiVerse VR application is an advanced interactive simulation designed exclusively for medical education, anatomy training, and procedural familiarization for healthcare students and professionals.
+        </p>
+        <p style="margin-bottom:10px;">
+          <strong>No Substitute for Clinical Training:</strong> This software does not qualify or license individuals to perform surgical procedures on human patients. Real surgical interventions require formal accredited medical training, supervised clinical residency, and institutional credentials.
+        </p>
+        <p style="margin-bottom:10px;">
+          <strong>No Patient Diagnosis or Treatment:</strong> The information provided by the 3D models and the AI Medical Learning Assistant is for illustrative pedagogical purposes only and must never be utilized as clinical decision support for individual patient care.
+        </p>
+      </div>
+      <button class="btn-action" data-close="modalDisclaimer">Understood & Acknowledged</button>
+    </div>
+  </div>
+
+  <!-- MODAL: SIMULATION CERTIFICATE -->
+  <div id="modalCertificate" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 650px;">
+      <div class="modal-header">
+        <div class="modal-title">Certificate of Surgical Simulation Competence</div>
+        <button class="btn-close-modal" data-close="modalCertificate">&times;</button>
+      </div>
+      <div id="certificatePrintableArea" style="background:#020914; border:2px solid var(--cyan); border-radius:12px; padding:24px; text-align:center; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:10px; right:10px; opacity:0.1; font-size:90px; color:var(--cyan); pointer-events:none;">⚕</div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--cyan); letter-spacing:2px; text-transform:uppercase;">SURGIVERSE MEDICAL EDUCATION ALLIANCE</div>
+        <div style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#ffffff; margin:10px 0 4px;">CERTIFICATE OF SIMULATION ACHIEVEMENT</div>
+        <div style="font-size:12px; color:var(--text-muted);">This credential certifies that</div>
+        <div style="font-family:var(--font-display); font-size:20px; font-weight:600; color:var(--cyan); margin:12px 0 6px;" id="certStudentName">Medical Resident Doctor</div>
+        <div style="font-size:12px; color:var(--text-secondary); max-width:480px; margin:0 auto; line-height:1.5;">
+          has successfully performed 3D virtual anatomical explorations, inspected sterile surgical instrumentation, and demonstrated competence in educational surgical simulation protocols in WebXR.
+        </div>
+
+        <div style="display:flex; justify-content:space-around; margin-top:20px; padding-top:16px; border-top:1px solid rgba(0, 240, 255, 0.2);">
+          <div>
+            <div style="font-size:10px; font-family:var(--font-mono); color:var(--text-muted);">SURGICAL SPECIALTY</div>
+            <div style="font-size:13px; font-weight:600; color:#ffffff;">General & Cardiothoracic</div>
+          </div>
+          <div>
+            <div style="font-size:10px; font-family:var(--font-mono); color:var(--text-muted);">SIMULATION SCORE</div>
+            <div style="font-size:13px; font-weight:600; color:var(--emerald);" id="certScore">96% Competence</div>
+          </div>
+          <div>
+            <div style="font-size:10px; font-family:var(--font-mono); color:var(--text-muted);">DATE ISSUED</div>
+            <div style="font-size:13px; font-weight:600; color:#ffffff;" id="certDate">Current Session</div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-action-row">
+        <button class="btn-action" onclick="window.print()">Print / Export Certificate</button>
+        <button class="btn-action secondary" data-close="modalCertificate">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden button hook for A-Frame Enter VR -->
+  <button id="btnEnterVR" style="display: none;"></button>
+
+  <!-- ==========================================================================
+       SURGIVERSE VR JAVASCRIPT LOGIC & A-FRAME COMPONENTS
+       ========================================================================== -->
+  <script>
+    /* ==========================================================================
+       1. CLINICAL AUDIO SYNTHESIZER (Pure Web Audio API - Zero Dependencies)
+       ========================================================================== */
+    class ClinicalAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.ecgInterval = null;
+        this.bpm = 72;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+            this.startEcgBeep();
+          }
+        } else if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type, duration, gainVal = 0.08) {
+        if (this.muted || !this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      playHeartbeat() {
+        if (this.muted || !this.ctx) return;
+        // Dual thump (lub-dub)
+        this.playTone(65, 'sine', 0.12, 0.12);
+        setTimeout(() => this.playTone(45, 'sine', 0.16, 0.1), 140);
+      }
+
+      playEcgBeep() {
+        if (this.muted || !this.ctx) return;
+        this.playTone(880, 'sine', 0.07, 0.05);
+      }
+
+      playUiClick() {
+        this.playTone(1200, 'sine', 0.04, 0.04);
+      }
+
+      playGrabTool() {
+        this.playTone(620, 'triangle', 0.09, 0.06);
+        setTimeout(() => this.playTone(880, 'sine', 0.08, 0.05), 50);
+      }
+
+      playSurgicalAction() {
+        // Metallic snip / clamp ratchet sound
+        this.playTone(1400, 'square', 0.03, 0.04);
+        setTimeout(() => this.playTone(900, 'sine', 0.06, 0.05), 40);
+      }
+
+      startEcgBeep() {
+        if (this.ecgInterval) clearInterval(this.ecgInterval);
+        const intervalMs = (60 / this.bpm) * 1000;
+        this.ecgInterval = setInterval(() => {
+          this.playEcgBeep();
+        }, intervalMs);
+      }
+
+      setBpm(newBpm) {
+        this.bpm = newBpm;
+        this.startEcgBeep();
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
+      }
+    }
+
+    const audio = new ClinicalAudioEngine();
+
+    // Unlock Web Audio on first user interaction
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, () => audio.init(), { once: true });
+    });
+
+    /* ==========================================================================
+       2. MEDICAL KNOWLEDGE BASE & AI ASSISTANT DATA
+       ========================================================================== */
+    const ANATOMY_DATABASE = {
+      heart: {
+        name: "Heart (Cor)",
+        system: "Cardiovascular System",
+        location: "Middle mediastinum, thoracic cavity, resting on the central tendon of the diaphragm.",
+        function: "Four-chambered muscular pump maintaining pulmonary and systemic circulation through rhythmic contractions.",
+        relations: "Anterior: Sternum & costal cartilages; Posterior: Esophagus, descending thoracic aorta; Lateral: Lungs & phrenic nerves.",
+        clinicalNotes: "During Coronary Artery Bypass Grafting (CABG), the Left Anterior Descending (LAD) artery is the most critical target, frequently revascularized with the Left Internal Mammary Artery (LIMA).",
+        color: 0xc9184a
+      },
+      lungs: {
+        name: "Lungs (Pulmones)",
+        system: "Respiratory System",
+        location: "Lateral thoracic cavities flanking the mediastinum, enveloped by visceral and parietal pleura.",
+        function: "Alveolar gas exchange (oxygen uptake and carbon dioxide elimination) across the blood-air barrier.",
+        relations: "Medial: Heart, mediastinal structures; Inferior: Hemidiaphragms; Superior: Thoracic inlet/subclavian vessels.",
+        clinicalNotes: "The right lung has 3 lobes (superior, middle, inferior) with oblique and horizontal fissures, while the left lung has 2 lobes and the cardiac notch.",
+        color: 0xf3a6b2
+      },
+      brain: {
+        name: "Brain (Encephalon)",
+        system: "Central Nervous System",
+        location: "Within the cranial cavity, surrounded by dura mater, arachnoid mater, pia mater, and cerebrospinal fluid (CSF).",
+        function: "Control center for cognitive computation, sensory integration, motor execution, autonomic regulation, and consciousness.",
+        relations: "Supported by skull base fossae; connected to the spinal cord via the brainstem through the foramen magnum.",
+        clinicalNotes: "During a pterional craniotomy, the Sylvian fissure is micro-dissected to expose the circle of Willis and middle cerebral artery without brain retraction.",
+        color: 0xdfb4bc
+      },
+      liver: {
+        name: "Liver (Hepar)",
+        system: "Digestive & Metabolic System",
+        location: "Right hypochondrium and epigastrium, beneath the right hemidiaphragm and protected by ribs 7-11.",
+        function: "Bile synthesis, glycogen storage, plasma protein production (albumin, clotting factors), and metabolic detoxification.",
+        relations: "Superior: Diaphragm; Inferior: Gallbladder, hepatic flexure of colon, duodenum, right kidney; Posterior: Inferior Vena Cava.",
+        clinicalNotes: "Divided into 8 functional segments according to the Couinaud classification based on independent vascular inflow, biliary drainage, and venous outflow.",
+        color: 0x7a281c
+      },
+      stomach: {
+        name: "Stomach (Gaster)",
+        system: "Gastrointestinal System",
+        location: "Left upper quadrant, epigastrium, and left hypochondrium.",
+        function: "Mechanical churning and chemical digestion of bolus into chyme using gastric acid (HCl) and pepsinogen.",
+        relations: "Anterior: Anterior abdominal wall, left lobe of liver; Posterior: Omental bursa, pancreas, left kidney; Superior: Esophagus; Inferior: Duodenum.",
+        clinicalNotes: "Blood supply arises exclusively from the celiac trunk via the left gastric, common hepatic, and splenic arteries, providing robust collateral flow.",
+        color: 0xbc6c25
+      },
+      kidneys: {
+        name: "Kidneys (Renes)",
+        system: "Urinary System",
+        location: "Retroperitoneal space on posterior abdominal wall, spanning vertebrae T12 to L3 (right kidney sits slightly lower).",
+        function: "Blood filtration, urine formation, electrolyte homeostasis, blood pressure regulation (renin-angiotensin-aldosterone), and erythropoietin production.",
+        relations: "Superior: Adrenal (suprarenal) glands; Posterior: Psoas major, quadratus lumborum; Medial: Renal hilum (renal vein anterior, renal artery middle, renal pelvis posterior).",
+        clinicalNotes: "The classic anatomical arrangement at the renal hilum from anterior to posterior is Vein, Artery, Ureter (V-A-U rule).",
+        color: 0x6a040f
+      },
+      pancreas: {
+        name: "Pancreas",
+        system: "Endocrine & Exocrine System",
+        location: "Retroperitoneal organ lying transversally behind the stomach in the epigastrium and left hypochondrium.",
+        function: "Exocrine secretion of digestive enzymes (amylase, lipase, trypsin) and endocrine secretion of insulin, glucagon, and somatostatin.",
+        relations: "Head encircled by duodenal C-loop; Body crosses lumbar spine and aorta; Tail abuts splenic hilum.",
+        clinicalNotes: "Whipple procedure (pancreaticoduodenectomy) is the definitive surgical treatment for resectable head of pancreas carcinomas.",
+        color: 0xe09f3e
+      },
+      spleen: {
+        name: "Spleen (Lien)",
+        system: "Lymphatic & Hematologic System",
+        location: "Left hypochondrium, posterior to the stomach, under the 9th to 11th ribs.",
+        function: "Blood filtration, phagocytosis of aged red blood cells, immune response mediation, and platelet reservoir.",
+        relations: "Anterior: Stomach; Medial: Left kidney; Inferior: Left colic flexure; Posterolateral: Diaphragm.",
+        clinicalNotes: "The spleen is the most frequently injured abdominal organ in blunt trauma. Splenectomy carries a lifetime risk of Overwhelming Post-Splenectomy Infection (OPSI).",
+        color: 0x582f4e
+      },
+      intestines: {
+        name: "Intestinal Tract",
+        system: "Gastrointestinal System",
+        location: "Central, umbilical, and pelvic regions of the abdominal cavity.",
+        function: "Nutrient absorption (duodenum, jejunum, ileum) and water/electrolyte reabsorption with fecal consolidation (colon).",
+        relations: "Enclosed anteriorly by greater omentum; tethered to the posterior abdominal wall by the mesentery.",
+        clinicalNotes: "In open appendectomy, identification of the teniae coli on the cecum reliably leads to the base of the vermiform appendix.",
+        color: 0xb07d62
+      },
+      bladder: {
+        name: "Urinary Bladder (Vesica Urinaria)",
+        system: "Urinary System",
+        location: "Lesser pelvis, resting on pelvic floor; ascends into lower abdomen when distended.",
+        function: "Distensible reservoir storing urine delivered from kidneys via bilateral ureters until micturition.",
+        relations: "Anterior: Pubic symphysis (separated by retropubic space of Retzius); Posterior: Rectum (in males) or uterus/vagina (in females).",
+        clinicalNotes: "The trigone of the bladder is a smooth triangular mucosal area demarcated by the two ureteric orifices and the internal urethral meatus.",
+        color: 0xd4a373
+      }
+    };
+
+    const INSTRUMENT_DATABASE = {
+      scalpel: {
+        name: "Surgical Scalpel #10 Blade",
+        type: "Sharp Cutting Instrument",
+        purpose: "Making primary incisions through epidermis, dermis, and subcutaneous fascia.",
+        handling: "Held in the 'pencil grip' for fine control or 'dinner knife grip' for long linear laparotomy cuts using the curved belly of the blade.",
+        safety: "Never recap blades by hand. Always pass in a neutral transfer zone or kidney basin."
+      },
+      scissors: {
+        name: "Metzenbaum Dissecting Scissors",
+        type: "Delicate Dissecting Tool",
+        purpose: "Blunt and sharp dissection of delicate soft tissue layers and fascial planes.",
+        handling: "Curved tips oriented in the direction of dissection to prevent accidental puncture of underlying vessels.",
+        safety: "Never use fine Metzenbaums to cut sutures, mesh, or bone; doing so dulls the precision tungsten-carbide edges."
+      },
+      forceps: {
+        name: "DeBakey Atraumatic Tissue Forceps",
+        type: "Grasping & Handling Instrument",
+        purpose: "Holding vascular, bowel, or fragile visceral tissue without crushing trauma.",
+        handling: "Held like a pen between index, thumb, and middle fingers; non-toothed ribbed longitudinal jaws protect intima.",
+        safety: "Inspect jaw teeth for alignment before vascular anastomosis."
+      },
+      retractor: {
+        name: "Weitlaner Self-Retaining Retractor",
+        type: "Exposure & Retraction",
+        purpose: "Maintaining wound aperture open hands-free during orthopedic, spinal, or vascular exposure.",
+        handling: "Ratchet lock clicks securely to maintain desired tension; available with blunt or sharp curved prongs.",
+        safety: "Relieve tension periodically during lengthy cases to avoid pressure necrosis of wound margins."
+      },
+      needleholder: {
+        name: "Mayo-Hegar Needle Driver",
+        type: "Suturing & Closure Instrument",
+        purpose: "Grasping curved surgical needles securely during tissue approximation and knot tying.",
+        handling: "Grasp needle at approximately 1/3 distance from the swaged suture eye to the tip for optimal torque control.",
+        safety: "Ensure needle is clamped strictly perpendicularly at the tip of the cross-hatched jaws."
+      },
+      clamp: {
+        name: "Hemostatic Kelly Clamp",
+        type: "Vascular Clamping & Occlusion",
+        purpose: "Clamping bleeding blood vessels or grasping heavy pedicles before ligature placement.",
+        handling: "Serrated on the distal half of jaws; locking ratchet holds occlusive pressure.",
+        safety: "Avoid catching adjacent nerves when clamping vascular pedicles."
+      },
+      laparoscopic: {
+        name: "Maryland Laparoscopic Dissector",
+        type: "Minimally Invasive Tool",
+        purpose: "Fine blunt dissection, vessel skeletonization, and electrocautery tissue separation through a 5mm port.",
+        handling: "360-degree rotating shaft collar with double-action curved jaws controlled by ergonomic ring handles.",
+        safety: "Ensure active electrocautery tip stays within the camera's field of view at all times."
+      },
+      suction: {
+        name: "Yankauer Suction Cannula",
+        type: "Aspiration & Field Clearing",
+        purpose: "Aspirating blood, irrigation fluid, and smoke to maintain continuous visualization of the sterile field.",
+        handling: "Bulbous head with side vent holes prevents vacuum trauma to delicate visceral surfaces.",
+        safety: "Cover side thumb port to engage full suction power; uncover to gently release tissue."
+      }
+    };
+
+    const SURGERY_MODULES = {
+      cabg: {
+        name: "Coronary Artery Bypass Graft (CABG)",
+        specialty: "Cardiothoracic Surgery",
+        steps: [
+          { num: 1, title: "Median Sternotomy & Retractor", desc: "Perform midline incision, divide the sternum with oscillating bone saw, and place sternal retractor." },
+          { num: 2, title: "Pericardial Cradle Exposure", desc: "Incise pericardium longitudinally and suspend with traction stay sutures to elevate the heart." },
+          { num: 3, title: "Identify LAD & Harvest Graft", desc: "Identify the Left Anterior Descending coronary artery and harvest the Left Internal Mammary Artery (LIMA)." },
+          { num: 4, title: "Micro-Vascular Anastomosis", desc: "Perform end-to-side anastomosis using 7-0 Prolene running suture under surgical loupe magnification." },
+          { num: 5, title: "Coronary Perfusion Verification", desc: "Remove vascular bulldogs, check transit-time flow probe (>20 mL/min), achieve meticulous hemostasis." }
+        ]
+      },
+      craniotomy: {
+        name: "Pterional Craniotomy",
+        specialty: "Neurosurgery",
+        steps: [
+          { num: 1, title: "Scalp Incision & Flap Reflection", desc: "Curvilinear frontotemporal incision behind the hairline; reflect skin-galea-temporalis flap anteriorly." },
+          { num: 2, title: "Burr Hole Trephination", desc: "Place key burr hole at the sphenoid ridge / MacCarty keyhole using high-speed neurosurgical drill." },
+          { num: 3, title: "Bone Flap Elevation", desc: "Elevate free osteoplastic bone flap using craniotome; strip dura mater carefully to prevent tears." },
+          { num: 4, title: "C-Shaped Dural Incision", desc: "Incise dura with #11 blade based on sphenoid wing; reflect dura over moist neuro-cottonoids." },
+          { num: 5, title: "Microsurgical Sylvian Dissection", desc: "Dissect arachnoid trabeculae to release CSF, relax the brain, and expose the middle cerebral artery." }
+        ]
+      },
+      ortho: {
+        name: "Total Knee Arthroplasty (TKA)",
+        specialty: "Orthopedic Surgery",
+        steps: [
+          { num: 1, title: "Medial Parapatellar Arthrotomy", desc: "Anterior midline skin incision with medial parapatellar capsular incision; evert patella laterally." },
+          { num: 2, title: "Distal Femoral Resection", desc: "Position intramedullary femoral rod with 5-6 degree valgus cutting guide; perform distal femoral cut." },
+          { num: 3, title: "Proximal Tibial Cut", desc: "Mount extramedullary tibial alignment guide perpendicular to mechanical axis; resect proximal tibial plateau." },
+          { num: 4, title: "Trial Balancing & Range of Motion", desc: "Insert trial femoral, tibial, and poly insert components; verify 0-130 degree flexion-extension stability." },
+          { num: 5, title: "PMR Cementing & Implantation", desc: "Pressurize polymethylmethacrylate (PMMA) bone cement, seat final cobalt-chrome implants, remove excess cement." }
+        ]
+      },
+      laparoscopic: {
+        name: "Laparoscopic Cholecystectomy",
+        specialty: "Minimally Invasive Surgery",
+        steps: [
+          { num: 1, title: "Pneumoperitoneum & Ports", desc: "Establish 12 mmHg CO2 pneumoperitoneum with Veress needle; place 10mm umbilical & 5mm subcostal trocars." },
+          { num: 2, title: "Cephalic Fundus Retraction", desc: "Grasp gallbladder fundus and push cephalad over liver; retract Hartmann's pouch laterally." },
+          { num: 3, title: "Dissect Calot's Triangle", desc: "Clear fat and fibroareolar tissue to obtain the Critical View of Safety (cystic duct & cystic artery only)." },
+          { num: 4, title: "Hem-o-lok Clipping & Division", desc: "Apply two clips proximally and one distally on both cystic duct and cystic artery; divide with endoscopic scissors." },
+          { num: 5, title: "Liver Bed Separation & Extraction", desc: "Dissect gallbladder from liver bed with hook electrocautery; retrieve specimen in Endobag via umbilical port." }
+        ]
+      },
+      general: {
+        name: "Open Appendectomy",
+        specialty: "General Surgery",
+        steps: [
+          { num: 1, title: "McBurney's Gridiron Incision", desc: "Transverse skin incision 1/3 distance from anterior superior iliac spine (ASIS) to umbilicus." },
+          { num: 2, title: "Muscle-Splitting Approach", desc: "Split external oblique, internal oblique, and transversus abdominis along their natural fiber orientations." },
+          { num: 3, title: "Deliver Cecum & Appendix", desc: "Identify cecum, follow anterior teniae coli to the base of appendix, exteriorize carefully." },
+          { num: 4, title: "Mesoappendix Ligation", desc: "Clamp and divide mesoappendix containing appendicular artery; place purse-string suture on cecum." },
+          { num: 5, title: "Stump Inversion & Layered Closure", desc: "Ligate appendiceal base, transect appendix, invert stump into cecum, close abdominal wall in layers." }
+        ]
+      },
+      ophthalmic: {
+        name: "Cataract Phacoemulsification",
+        specialty: "Ophthalmic Surgery",
+        steps: [
+          { num: 1, title: "Clear Corneal Incision", desc: "Create 2.4mm self-sealing temporal clear corneal incision and side-port incision with diamond blade." },
+          { num: 2, title: "Continuous Curvilinear Capsulorhexis", desc: "Inject viscoelastic; create continuous 5.5mm circular opening in anterior lens capsule with cystotome." },
+          { num: 3, title: "Hydrodissection & Nucleus Phaco", desc: "Separate lens cortex from capsule with balanced salt solution; sculpt and emulsify dense nucleus." },
+          { num: 4, title: "Cortical Aspiration", desc: "Aspirate residual peripheral lens cortex using automated irrigation/aspiration handpiece." },
+          { num: 5, title: "Foldable IOL Implantation", desc: "Inject foldable acrylic intraocular lens (IOL) into capsular bag; verify central haptic positioning." }
+        ]
+      }
+    };
+
+    const QUIZ_QUESTIONS = [
+      {
+        question: "During a Coronary Artery Bypass Graft (CABG), which conduit is recognized as having the highest long-term patency rate for revascularizing the Left Anterior Descending (LAD) artery?",
+        options: [
+          "Left Internal Mammary Artery (LIMA)",
+          "Great Saphenous Vein (GSV)",
+          "Radial Artery",
+          "Gastroepiploic Artery"
+        ],
+        answer: 0,
+        explanation: "The Left Internal Mammary Artery (LIMA) anastomosed to the LAD demonstrates >90% patency at 10 years, significantly outperforming venous conduits due to its native arterial endothelium and internal elastic lamina resistance to atherosclerosis."
+      },
+      {
+        question: "What is the primary anatomical structure landmark used during an open appendectomy to reliably track and locate the base of the appendix?",
+        options: [
+          "Ligament of Treitz",
+          "Teniae Coli of the Cecum",
+          "Falciform Ligament",
+          "Arcuate Line of Douglas"
+        ],
+        answer: 1,
+        explanation: "The three longitudinal muscle bands of the colon (teniae coli) converge symmetrically at the base of the vermiform appendix on the posteromedial wall of the cecum, serving as the definitive anatomical guide."
+      },
+      {
+        question: "Which cranial nerve passes through the internal acoustic meatus and is at risk during retrosigmoid craniotomies for vestibular schwannoma resection?",
+        options: [
+          "CN V (Trigeminal)",
+          "CN VII (Facial) and CN VIII (Vestibulocochlear)",
+          "CN IX (Glossopharyngeal)",
+          "CN XII (Hypoglossal)"
+        ],
+        answer: 1,
+        explanation: "Cranial nerves VII (Facial) and VIII (Vestibulocochlear) traverse the internal acoustic meatus together with the labyrinthine artery into the petrous temporal bone."
+      },
+      {
+        question: "What is the recommended safe intra-abdominal carbon dioxide (CO2) insufflation pressure during routine laparoscopic surgery in an adult patient?",
+        options: [
+          "5 - 8 mmHg",
+          "12 - 15 mmHg",
+          "22 - 25 mmHg",
+          "30 - 35 mmHg"
+        ],
+        answer: 1,
+        explanation: "A pneumoperitoneum pressure of 12-15 mmHg provides adequate operative visualization while preventing severe adverse hemodynamic compromises such as decreased venous return, vena caval compression, and excessive peak airway pressures."
+      },
+      {
+        question: "Which surgical instrument is specifically engineered with fine, non-traumatic longitudinal serrated jaws to grasp delicate vascular walls without tearing the intima?",
+        options: [
+          "Kocher Forceps",
+          "DeBakey Tissue Forceps",
+          "Allis Clamps",
+          "Backhaus Towel Clamp"
+        ],
+        answer: 1,
+        explanation: "DeBakey atraumatic forceps have fine longitudinal ribbing without sharp cross-teeth, designed specifically by pioneer surgeon Dr. Michael DeBakey to handle blood vessels and delicate viscera safely."
+      },
+      {
+        question: "In Calot's triangle dissection during laparoscopic cholecystectomy, which two structures must be definitively identified before clipping to achieve the Critical View of Safety?",
+        options: [
+          "Common Bile Duct and Hepatic Artery",
+          "Cystic Duct and Cystic Artery",
+          "Portal Vein and Celiac Trunk",
+          "Right Gastric Artery and Duodenum"
+        ],
+        answer: 1,
+        explanation: "The Critical View of Safety requires clearing Calot's triangle of fat and fibrous tissue so that only two structures (the cystic duct and the cystic artery) are seen entering the gallbladder, with the lower third of the gallbladder bed dissected free."
+      },
+      {
+        question: "Which of the following is considered the primary intrinsic pacemaker of the healthy human heart, generating spontaneous electrical depolarizations?",
+        options: [
+          "Atrioventricular (AV) Node",
+          "Sinoatrial (SA) Node",
+          "Bundle of His",
+          "Purkinje Fiber Network"
+        ],
+        answer: 1,
+        explanation: "The Sinoatrial (SA) Node, located at the junction of the superior vena cava and the right atrium, initiates impulses at 60-100 bpm and is the primary cardiac pacemaker."
+      },
+      {
+        question: "During Total Knee Arthroplasty (TKA), why is the distal femoral resection routinely cut at a 5 to 6 degree valgus angle relative to the femoral anatomical axis?",
+        options: [
+          "To compensate for the physiological difference between anatomical and mechanical axes",
+          "To lengthen the quadriceps tendon mechanism",
+          "To induce external patellar subluxation",
+          "To match the slope of the anterior cruciate ligament"
+        ],
+        answer: 0,
+        explanation: "The femur's anatomical shaft axis is tilted ~5-7 degrees valgus relative to its mechanical axis (a line drawn from the femoral head center to the knee center). Cutting the distal femur at 5-6° valgus restores neutral mechanical alignment."
+      }
+    ];
+
+    /* ==========================================================================
+       3. CUSTOM A-FRAME COMPONENT: PROCEDURAL 3D HUMAN ANATOMY SYSTEM
+       ========================================================================== */
+    AFRAME.registerComponent('human-anatomy-system', {
+      schema: {
+        skinOpacity: { type: 'number', default: 0.45 },
+        activeOrgan: { type: 'string', default: 'heart' }
+      },
+
+      init: function () {
+        this.organs = {};
+        this.layers = {
+          skin: new THREE.Group(),
+          skeleton: new THREE.Group(),
+          muscles: new THREE.Group(),
+          organs: new THREE.Group(),
+          vascular: new THREE.Group(),
+          nervous: new THREE.Group()
+        };
+
+        const rootObj = this.el.object3D;
+        Object.values(this.layers).forEach(layer => rootObj.add(layer));
+
+        this.buildSkin();
+        this.buildSkeleton();
+        this.buildMuscles();
+        this.buildInternalOrgans();
+        this.buildCirculatorySystem();
+        this.buildNervousSystem();
+
+        this.time = 0;
+        this.bindEvents();
+      },
+
+      buildSkin: function () {
+        const skinMat = new THREE.MeshStandardMaterial({
+          color: 0xdeb897,
+          roughness: 0.65,
+          metalness: 0.1,
+          transparent: true,
+          opacity: this.data.skinOpacity,
+          depthWrite: false
+        });
+        this.skinMaterial = skinMat;
+
+        // Torso & Chest contour
+        const torsoGeo = new THREE.CylinderGeometry(0.24, 0.20, 0.72, 32);
+        const torsoMesh = new THREE.Mesh(torsoGeo, skinMat);
+        torsoMesh.position.set(0, 0.05, 0);
+        this.layers.skin.add(torsoMesh);
+
+        // Pelvis & Abdomen
+        const pelvisGeo = new THREE.CylinderGeometry(0.20, 0.21, 0.32, 32);
+        const pelvisMesh = new THREE.Mesh(pelvisGeo, skinMat);
+        pelvisMesh.position.set(0, -0.42, 0);
+        this.layers.skin.add(pelvisMesh);
+
+        // Head & Neck
+        const headGeo = new THREE.SphereGeometry(0.14, 32, 28);
+        headGeo.scale(0.85, 1.15, 0.95);
+        const headMesh = new THREE.Mesh(headGeo, skinMat);
+        headMesh.position.set(0, 0.65, 0.02);
+        this.layers.skin.add(headMesh);
+
+        const neckGeo = new THREE.CylinderGeometry(0.085, 0.11, 0.16, 24);
+        const neckMesh = new THREE.Mesh(neckGeo, skinMat);
+        neckMesh.position.set(0, 0.46, 0);
+        this.layers.skin.add(neckMesh);
+
+        // Shoulders & Upper Arms
+        [-0.32, 0.32].forEach(x => {
+          const armGeo = new THREE.CylinderGeometry(0.06, 0.048, 0.62, 20);
+          const armMesh = new THREE.Mesh(armGeo, skinMat);
+          armMesh.position.set(x, -0.05, 0);
+          armMesh.rotation.z = x > 0 ? -0.15 : 0.15;
+          this.layers.skin.add(armMesh);
+        });
+
+        // Thighs & Upper Legs
+        [-0.11, 0.11].forEach(x => {
+          const legGeo = new THREE.CylinderGeometry(0.09, 0.07, 0.85, 24);
+          const legMesh = new THREE.Mesh(legGeo, skinMat);
+          legMesh.position.set(x, -0.95, 0);
+          this.layers.skin.add(legMesh);
+        });
+      },
+
+      buildSkeleton: function () {
+        const boneMat = new THREE.MeshStandardMaterial({
+          color: 0xede4d4,
+          roughness: 0.5,
+          metalness: 0.05
+        });
+
+        // Cranium Skull
+        const skullGeo = new THREE.SphereGeometry(0.12, 24, 20);
+        skullGeo.scale(0.82, 1.05, 0.92);
+        const skullMesh = new THREE.Mesh(skullGeo, boneMat);
+        skullMesh.position.set(0, 0.64, 0.01);
+        this.layers.skeleton.add(skullMesh);
+
+        // Mandible Jaw
+        const jawGeo = new THREE.TorusGeometry(0.055, 0.016, 12, 20, Math.PI);
+        const jawMesh = new THREE.Mesh(jawGeo, boneMat);
+        jawMesh.position.set(0, 0.53, 0.06);
+        jawMesh.rotation.x = Math.PI / 2;
+        this.layers.skeleton.add(jawMesh);
+
+        // Vertebral Spine
+        for (let i = 0; i < 24; i++) {
+          const vertebraGeo = new THREE.CylinderGeometry(0.024, 0.024, 0.018, 16);
+          const vertebraMesh = new THREE.Mesh(vertebraGeo, boneMat);
+          const yPos = 0.42 - (i * 0.038);
+          const zCurve = Math.sin(i * 0.28) * 0.025 - 0.06;
+          vertebraMesh.position.set(0, yPos, zCurve);
+          this.layers.skeleton.add(vertebraMesh);
+        }
+
+        // Sternum (Manubrium & Body)
+        const sternumGeo = new THREE.BoxGeometry(0.042, 0.22, 0.015);
+        const sternumMesh = new THREE.Mesh(sternumGeo, boneMat);
+        sternumMesh.position.set(0, 0.18, 0.17);
+        this.layers.skeleton.add(sternumMesh);
+
+        // Rib Cage (12 paired curved ribs)
+        for (let r = 0; r < 10; r++) {
+          const y = 0.32 - (r * 0.032);
+          const width = 0.17 + Math.sin((r / 10) * Math.PI) * 0.07;
+          const depth = 0.14 + Math.sin((r / 10) * Math.PI) * 0.05;
+
+          [-1, 1].forEach(side => {
+            const ribCurve = new THREE.QuadraticBezierCurve3(
+              new THREE.Vector3(0, y, -0.06),
+              new THREE.Vector3(side * width, y - 0.01, 0.05),
+              new THREE.Vector3(side * 0.025, y - 0.028, 0.16)
+            );
+            const ribGeo = new THREE.TubeGeometry(ribCurve, 18, 0.007, 8, false);
+            const ribMesh = new THREE.Mesh(ribGeo, boneMat);
+            this.layers.skeleton.add(ribMesh);
+          });
+        }
+
+        // Pelvic Girdle (Iliac wings & Sacrum)
+        [-0.10, 0.10].forEach(side => {
+          const iliumGeo = new THREE.TorusGeometry(0.08, 0.02, 12, 20, Math.PI * 0.9);
+          const iliumMesh = new THREE.Mesh(iliumGeo, boneMat);
+          iliumMesh.position.set(side, -0.42, 0);
+          iliumMesh.rotation.y = side > 0 ? 0.3 : -0.3;
+          iliumMesh.rotation.z = Math.PI / 2;
+          this.layers.skeleton.add(iliumMesh);
+        });
+
+        // Femurs (Thigh bones)
+        [-0.11, 0.11].forEach(side => {
+          const femurGeo = new THREE.CylinderGeometry(0.02, 0.018, 0.65, 16);
+          const femurMesh = new THREE.Mesh(femurGeo, boneMat);
+          femurMesh.position.set(side, -0.85, 0);
+          this.layers.skeleton.add(femurMesh);
+        });
+      },
+
+      buildMuscles: function () {
+        const muscleMat = new THREE.MeshStandardMaterial({
+          color: 0x9e2a2b,
+          roughness: 0.6,
+          metalness: 0.1
+        });
+
+        // Pectoralis Major (Left & Right chest muscles)
+        [-0.09, 0.09].forEach(side => {
+          const pecGeo = new THREE.BoxGeometry(0.12, 0.13, 0.03);
+          const pecMesh = new THREE.Mesh(pecGeo, muscleMat);
+          pecMesh.position.set(side, 0.22, 0.155);
+          pecMesh.rotation.z = side > 0 ? 0.1 : -0.1;
+          this.layers.muscles.add(pecMesh);
+        });
+
+        // Rectus Abdominis (Six-pack muscles)
+        for (let row = 0; row < 3; row++) {
+          [-0.045, 0.045].forEach(side => {
+            const absGeo = new THREE.BoxGeometry(0.038, 0.055, 0.02);
+            const absMesh = new THREE.Mesh(absGeo, muscleMat);
+            absMesh.position.set(side, 0.06 - (row * 0.075), 0.155);
+            this.layers.muscles.add(absMesh);
+          });
+        }
+
+        // Deltoids (Shoulders)
+        [-0.24, 0.24].forEach(side => {
+          const deltGeo = new THREE.SphereGeometry(0.055, 16, 16);
+          deltGeo.scale(1.1, 1.4, 1.1);
+          const deltMesh = new THREE.Mesh(deltGeo, muscleMat);
+          deltMesh.position.set(side, 0.28, 0);
+          this.layers.muscles.add(deltMesh);
+        });
+      },
+
+      buildInternalOrgans: function () {
+        const createInteractiveOrgan = (id, mesh, meta) => {
+          mesh.userData = { organId: id, ...meta };
+          mesh.name = id;
+          mesh.cursor = "pointer";
+          this.organs[id] = mesh;
+          this.layers.organs.add(mesh);
+
+          // Add clickable marker tag for A-Frame raycaster
+          mesh.traverse(child => {
+            if (child.isMesh) {
+              child.userData = mesh.userData;
+              child.name = id;
+            }
+          });
+        };
+
+        // 1. HEART (Cor) with Aortic Arch & Coronary Vessels
+        const heartGroup = new THREE.Group();
+        const heartMat = new THREE.MeshStandardMaterial({
+          color: 0xc9184a,
+          roughness: 0.45,
+          metalness: 0.15,
+          emissive: 0x330008,
+          emissiveIntensity: 0.2
+        });
+        const heartBaseGeo = new THREE.SphereGeometry(0.062, 28, 24);
+        heartBaseGeo.scale(0.85, 1.15, 0.95);
+        const heartBase = new THREE.Mesh(heartBaseGeo, heartMat);
+        heartGroup.add(heartBase);
+
+        // Aorta Arch
+        const aortaCurve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(0, 0.05, 0),
+          new THREE.Vector3(0.02, 0.11, 0),
+          new THREE.Vector3(-0.025, 0.06, -0.02)
+        );
+        const aortaGeo = new THREE.TubeGeometry(aortaCurve, 16, 0.016, 12, false);
+        const aortaMesh = new THREE.Mesh(aortaGeo, new THREE.MeshStandardMaterial({ color: 0xff1e38, roughness: 0.4 }));
+        heartGroup.add(aortaMesh);
+
+        heartGroup.position.set(-0.025, 0.16, 0.04);
+        heartGroup.rotation.z = -0.15;
+        heartGroup.rotation.y = 0.2;
+        createInteractiveOrgan('heart', heartGroup, ANATOMY_DATABASE.heart);
+
+        // 2. LUNGS (Left & Right)
+        const lungMat = new THREE.MeshStandardMaterial({ color: 0xf3a6b2, roughness: 0.6, metalness: 0.05 });
+        const lungsGroup = new THREE.Group();
+
+        // Right Lung (3 lobes)
+        const rightLungGeo = new THREE.CylinderGeometry(0.05, 0.065, 0.24, 24);
+        rightLungGeo.scale(1.1, 1.0, 0.9);
+        const rightLung = new THREE.Mesh(rightLungGeo, lungMat);
+        rightLung.position.set(0.11, 0.17, 0.02);
+        lungsGroup.add(rightLung);
+
+        // Left Lung (2 lobes, cardiac notch)
+        const leftLungGeo = new THREE.CylinderGeometry(0.045, 0.06, 0.23, 24);
+        leftLungGeo.scale(0.95, 1.0, 0.85);
+        const leftLung = new THREE.Mesh(leftLungGeo, lungMat);
+        leftLung.position.set(-0.11, 0.17, 0.02);
+        lungsGroup.add(leftLung);
+
+        createInteractiveOrgan('lungs', lungsGroup, ANATOMY_DATABASE.lungs);
+
+        // 3. BRAIN (Cerebrum, Cerebellum, Brainstem)
+        const brainGroup = new THREE.Group();
+        const brainMat = new THREE.MeshStandardMaterial({ color: 0xdfb4bc, roughness: 0.55, bumpScale: 0.05 });
+        [-0.032, 0.032].forEach(side => {
+          const hemiGeo = new THREE.SphereGeometry(0.052, 24, 20);
+          hemiGeo.scale(0.75, 1.0, 1.25);
+          const hemiMesh = new THREE.Mesh(hemiGeo, brainMat);
+          hemiMesh.position.set(side, 0.65, 0.015);
+          brainGroup.add(hemiMesh);
+        });
+
+        // Cerebellum
+        const cerebGeo = new THREE.SphereGeometry(0.035, 18, 16);
+        cerebGeo.scale(1.2, 0.8, 0.9);
+        const cerebMesh = new THREE.Mesh(cerebGeo, brainMat);
+        cerebMesh.position.set(0, 0.58, -0.04);
+        brainGroup.add(cerebMesh);
+
+        createInteractiveOrgan('brain', brainGroup, ANATOMY_DATABASE.brain);
+
+        // 4. LIVER (Wedge shaped, right hypochondrium)
+        const liverMat = new THREE.MeshStandardMaterial({ color: 0x7a281c, roughness: 0.5 });
+        const liverGeo = new THREE.ConeGeometry(0.12, 0.15, 24);
+        liverGeo.scale(1.4, 0.6, 0.9);
+        const liverMesh = new THREE.Mesh(liverGeo, liverMat);
+        liverMesh.position.set(0.065, 0.03, 0.05);
+        liverMesh.rotation.z = Math.PI / 2.3;
+        liverMesh.rotation.y = -0.3;
+        createInteractiveOrgan('liver', liverMesh, ANATOMY_DATABASE.liver);
+
+        // 5. STOMACH (J-shaped pouch)
+        const stomachMat = new THREE.MeshStandardMaterial({ color: 0xbc6c25, roughness: 0.55 });
+        const stomachCurve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(-0.02, 0.08, 0.02),
+          new THREE.Vector3(-0.09, 0.01, 0.04),
+          new THREE.Vector3(-0.01, -0.05, 0.05)
+        );
+        const stomachGeo = new THREE.TubeGeometry(stomachCurve, 20, 0.036, 14, false);
+        const stomachMesh = new THREE.Mesh(stomachGeo, stomachMat);
+        createInteractiveOrgan('stomach', stomachMesh, ANATOMY_DATABASE.stomach);
+
+        // 6. KIDNEYS (Paired bean-shaped retroperitoneal)
+        const kidneysGroup = new THREE.Group();
+        const kidneyMat = new THREE.MeshStandardMaterial({ color: 0x6a040f, roughness: 0.45 });
+        [-0.09, 0.09].forEach(side => {
+          const kGeo = new THREE.SphereGeometry(0.032, 18, 16);
+          kGeo.scale(0.65, 1.25, 0.7);
+          const kMesh = new THREE.Mesh(kGeo, kidneyMat);
+          const y = side > 0 ? -0.07 : -0.055; // Right kidney sits slightly lower due to liver
+          kMesh.position.set(side, y, -0.04);
+          kidneysGroup.add(kMesh);
+        });
+        createInteractiveOrgan('kidneys', kidneysGroup, ANATOMY_DATABASE.kidneys);
+
+        // 7. PANCREAS & SPLEEN
+        const pancreasMat = new THREE.MeshStandardMaterial({ color: 0xe09f3e, roughness: 0.6 });
+        const pancGeo = new THREE.BoxGeometry(0.12, 0.025, 0.025);
+        const pancMesh = new THREE.Mesh(pancGeo, pancreasMat);
+        pancMesh.position.set(-0.02, -0.02, 0.01);
+        pancMesh.rotation.z = -0.15;
+        createInteractiveOrgan('pancreas', pancMesh, ANATOMY_DATABASE.pancreas);
+
+        const spleenMat = new THREE.MeshStandardMaterial({ color: 0x582f4e, roughness: 0.5 });
+        const spleenGeo = new THREE.SphereGeometry(0.035, 16, 14);
+        spleenGeo.scale(0.8, 1.2, 0.6);
+        const spleenMesh = new THREE.Mesh(spleenGeo, spleenMat);
+        spleenMesh.position.set(-0.13, 0.02, -0.02);
+        createInteractiveOrgan('spleen', spleenMesh, ANATOMY_DATABASE.spleen);
+
+        // 8. INTESTINES (Small bowel loops & Colon frame)
+        const intestineGroup = new THREE.Group();
+        const smIntMat = new THREE.MeshStandardMaterial({ color: 0xd49866, roughness: 0.6 });
+        const lgColMat = new THREE.MeshStandardMaterial({ color: 0xb07d62, roughness: 0.65 });
+
+        // Small bowel central convoluted cluster
+        const smallBowel = new THREE.Mesh(new THREE.TorusKnotGeometry(0.065, 0.022, 48, 12, 2, 3), smIntMat);
+        smallBowel.position.set(0, -0.18, 0.05);
+        intestineGroup.add(smallBowel);
+
+        // Colon surrounding frame (Ascending, Transverse, Descending)
+        const colonCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0.09, -0.28, 0.03), // Cecum
+          new THREE.Vector3(0.095, -0.10, 0.04), // Ascending
+          new THREE.Vector3(0, -0.09, 0.08),     // Transverse
+          new THREE.Vector3(-0.095, -0.10, 0.04), // Descending
+          new THREE.Vector3(-0.06, -0.29, 0.02)  // Sigmoid
+        ]);
+        const colonGeo = new THREE.TubeGeometry(colonCurve, 32, 0.024, 12, false);
+        const colonMesh = new THREE.Mesh(colonGeo, lgColMat);
+        intestineGroup.add(colonMesh);
+        createInteractiveOrgan('intestines', intestineGroup, ANATOMY_DATABASE.intestines);
+
+        // 9. URINARY BLADDER
+        const bladderMat = new THREE.MeshStandardMaterial({ color: 0xd4aa7d, roughness: 0.5 });
+        const bladderGeo = new THREE.SphereGeometry(0.042, 18, 16);
+        bladderGeo.scale(1.0, 0.85, 0.95);
+        const bladderMesh = new THREE.Mesh(bladderGeo, bladderMat);
+        bladderMesh.position.set(0, -0.38, 0.06);
+        createInteractiveOrgan('bladder', bladderMesh, ANATOMY_DATABASE.bladder);
+      },
+
+      buildCirculatorySystem: function () {
+        const artMat = new THREE.MeshStandardMaterial({
+          color: 0xff1e40,
+          emissive: 0xff1e40,
+          emissiveIntensity: 0.45,
+          roughness: 0.35
+        });
+        const venMat = new THREE.MeshStandardMaterial({
+          color: 0x0088ff,
+          emissive: 0x0088ff,
+          emissiveIntensity: 0.45,
+          roughness: 0.35
+        });
+
+        // Abdominal Aorta
+        const aortaCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0, 0.18, -0.02),
+          new THREE.Vector3(-0.01, 0.0, -0.04),
+          new THREE.Vector3(-0.015, -0.22, -0.04),
+          new THREE.Vector3(-0.05, -0.38, -0.01) // Iliac bifurcation left
+        ]);
+        const aortaTube = new THREE.Mesh(new THREE.TubeGeometry(aortaCurve, 24, 0.012, 10, false), artMat);
+        this.layers.vascular.add(aortaTube);
+
+        // Inferior Vena Cava (IVC)
+        const ivcCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0.018, 0.16, -0.02),
+          new THREE.Vector3(0.02, 0.0, -0.038),
+          new THREE.Vector3(0.02, -0.22, -0.038),
+          new THREE.Vector3(0.05, -0.38, -0.01) // Iliac right
+        ]);
+        const ivcTube = new THREE.Mesh(new THREE.TubeGeometry(ivcCurve, 24, 0.014, 10, false), venMat);
+        this.layers.vascular.add(ivcTube);
+
+        // Carotid Arteries & Jugular Veins to head
+        [-0.03, 0.03].forEach(side => {
+          const carotidCurve = new THREE.LineCurve3(
+            new THREE.Vector3(side * 0.5, 0.28, -0.01),
+            new THREE.Vector3(side, 0.55, 0.01)
+          );
+          const cMesh = new THREE.Mesh(new THREE.TubeGeometry(carotidCurve, 10, 0.007, 8, false), side > 0 ? artMat : venMat);
+          this.layers.vascular.add(cMesh);
+        });
+      },
+
+      buildNervousSystem: function () {
+        const nerveMat = new THREE.MeshStandardMaterial({
+          color: 0xffd166,
+          emissive: 0xffa500,
+          emissiveIntensity: 0.4,
+          roughness: 0.4
+        });
+
+        // Spinal Cord trunk
+        const spineCordGeo = new THREE.CylinderGeometry(0.009, 0.007, 0.78, 12);
+        const spineCordMesh = new THREE.Mesh(spineCordGeo, nerveMat);
+        spineCordMesh.position.set(0, 0.12, -0.05);
+        this.layers.nervous.add(spineCordMesh);
+
+        // Peripheral Nerve branches (bilateral spinal nerve roots)
+        for (let i = 0; i < 14; i++) {
+          const y = 0.38 - (i * 0.045);
+          [-1, 1].forEach(side => {
+            const nerveLine = new THREE.LineCurve3(
+              new THREE.Vector3(0, y, -0.05),
+              new THREE.Vector3(side * 0.16, y - 0.03, -0.02)
+            );
+            const nerveTube = new THREE.Mesh(new THREE.TubeGeometry(nerveLine, 8, 0.0035, 6, false), nerveMat);
+            this.layers.nervous.add(nerveTube);
+          });
+        }
+      },
+
+      tick: function (time, delta) {
+        this.time += (delta || 16) * 0.001;
+
+        // Animate Heart Beating (Systole & Diastole pulse)
+        if (this.organs.heart) {
+          const pulse = Math.sin(this.time * 6.0); // ~72 BPM
+          const scale = 1.0 + (pulse > 0.4 ? (pulse - 0.4) * 0.18 : 0);
+          this.organs.heart.scale.set(scale, scale, scale);
+        }
+
+        // Animate Lungs Breathing (Tidal expansion)
+        if (this.organs.lungs) {
+          const breath = Math.sin(this.time * 1.5) * 0.05;
+          this.organs.lungs.scale.set(1.0 + breath, 1.0 + breath * 0.5, 1.0 + breath);
+        }
+      },
+
+      setLayerVisibility: function (layerName, isVisible) {
+        if (this.layers[layerName]) {
+          this.layers[layerName].visible = isVisible;
+        }
+      },
+
+      setSkinOpacity: function (opacity) {
+        this.skinMaterial.opacity = opacity;
+        this.skinMaterial.visible = opacity > 0.01;
+      },
+
+      selectOrgan: function (organId) {
+        if (!this.organs[organId]) return;
+        this.data.activeOrgan = organId;
+
+        // Highlight selected organ
+        Object.entries(this.organs).forEach(([id, mesh]) => {
+          mesh.traverse(child => {
+            if (child.isMesh && child.material) {
+              if (id === organId) {
+                child.material.emissive = new THREE.Color(0x00f0ff);
+                child.material.emissiveIntensity = 0.6;
+              } else {
+                child.material.emissive = new THREE.Color(0x000000);
+                child.material.emissiveIntensity = 0;
+              }
+            }
+          });
+        });
+
+        // Trigger UI Update & Audio
+        audio.playGrabTool();
+        updateInspectorWithOrgan(organId);
+        showToast(`Selected structure: ${ANATOMY_DATABASE[organId].name}`);
+      },
+
+      bindEvents: function () {
+        // VR Raycaster interaction
+        this.el.addEventListener('click', evt => {
+          if (evt.detail && evt.detail.intersectedEl) {
+            const targetObj = evt.detail.intersection ? evt.detail.intersection.object : null;
+            if (targetObj && targetObj.userData && targetObj.userData.organId) {
+              this.selectOrgan(targetObj.userData.organId);
+            }
+          }
+        });
+      }
+    });
+
+    /* ==========================================================================
+       4. A-FRAME COMPONENT: OPERATING ROOM & THEATRE ENVIRONMENTS
+       ========================================================================== */
+    AFRAME.registerComponent('or-environment', {
+      init: function () {
+        const root = this.el.object3D;
+
+        // Cleanroom Floor with anti-static tile grid
+        const floorGeo = new THREE.PlaneGeometry(16, 16, 16, 16);
+        const floorMat = new THREE.MeshStandardMaterial({
+          color: 0x122436,
+          roughness: 0.25,
+          metalness: 0.4
+        });
+        const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+        floorMesh.rotation.x = -Math.PI / 2;
+        floorMesh.position.y = 0;
+        root.add(floorMesh);
+
+        // OR Cleanroom Walls
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a334d, roughness: 0.6 });
+        const backWall = new THREE.Mesh(new THREE.PlaneGeometry(16, 6), wallMat);
+        backWall.position.set(0, 3, -5);
+        root.add(backWall);
+
+        // OPERATING TABLE
+        const tableGroup = new THREE.Group();
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x4a657a, metalness: 0.85, roughness: 0.2 });
+        const drapeMat = new THREE.MeshStandardMaterial({ color: 0x145a66, roughness: 0.7 }); // Sterile Surgical Teal
+
+        // Heavy hydraulic base column
+        const baseColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.75, 24), metalMat);
+        baseColumn.position.set(0, 0.38, -0.8);
+        tableGroup.add(baseColumn);
+
+        // Surgical tabletop
+        const tabletop = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.1, 2.1), drapeMat);
+        tabletop.position.set(0, 0.78, -0.8);
+        tableGroup.add(tabletop);
+
+        // Stainless side rails
+        [-0.44, 0.44].forEach(x => {
+          const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.05, 12), metalMat);
+          rail.rotation.x = Math.PI / 2;
+          rail.position.set(x, 0.78, -0.8);
+          tableGroup.add(rail);
+        });
+
+        // Patient Body Simulation Model on Table
+        const patientGroup = new THREE.Group();
+        const patientDrape = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.18, 1.8), drapeMat);
+        patientDrape.position.set(0, 0.9, -0.8);
+        patientGroup.add(patientDrape);
+
+        // Sterile surgical window aperture revealing anatomical operative field
+        const apertureWindow = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.02, 0.55), new THREE.MeshBasicMaterial({ color: 0x051320 }));
+        apertureWindow.position.set(0, 0.995, -0.8);
+        patientGroup.add(apertureWindow);
+
+        tableGroup.add(patientGroup);
+        root.add(tableGroup);
+
+        // OVERHEAD ARTICULATED SURGICAL LIGHT HEADS
+        const lampGroup = new THREE.Group();
+        const lampMat = new THREE.MeshStandardMaterial({ color: 0xecf6fa, metalness: 0.5, roughness: 0.3 });
+        const ledMat = new THREE.MeshBasicMaterial({ color: 0xd6f7ff });
+
+        [new THREE.Vector3(0, 3.2, -0.8), new THREE.Vector3(0.8, 3.2, -0.3)].forEach(pos => {
+          const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.44, 0.12, 32), lampMat);
+          lampHead.position.copy(pos);
+          lampHead.rotation.x = Math.PI;
+
+          // Glowing LED face
+          const lampLens = new THREE.Mesh(new THREE.CircleGeometry(0.35, 32), ledMat);
+          lampLens.position.set(0, -0.065, 0);
+          lampLens.rotation.x = Math.PI / 2;
+          lampHead.add(lampLens);
+
+          // Suspension arm
+          const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8, 12), metalMat);
+          arm.position.set(0, 0.45, 0);
+          lampHead.add(arm);
+
+          lampGroup.add(lampHead);
+        });
+        root.add(lampGroup);
+
+        // PATIENT VITALS TELEMETRY MONITORS (BOOM MOUNTED)
+        const monitorGroup = new THREE.Group();
+        const screenBox = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.65, 0.08), metalMat);
+        screenBox.position.set(1.4, 1.9, -1.2);
+        screenBox.rotation.y = -0.45;
+
+        // Dynamic 2D Canvas ECG Screen Texture
+        this.ecgCanvas = document.getElementById('ecgTextureCanvas');
+        this.ecgCtx = this.ecgCanvas.getContext('2d');
+        this.screenTexture = new THREE.CanvasTexture(this.ecgCanvas);
+
+        const screenFace = new THREE.Mesh(new THREE.PlaneGeometry(0.88, 0.58), new THREE.MeshBasicMaterial({ map: this.screenTexture }));
+        screenFace.position.set(0, 0, 0.045);
+        screenBox.add(screenFace);
+
+        monitorGroup.add(screenBox);
+        root.add(monitorGroup);
+
+        // ANESTHESIA WORKSTATION MACHINE
+        const anesthGroup = new THREE.Group();
+        const cartBody = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x224259, roughness: 0.4 }));
+        cartBody.position.set(-1.6, 0.7, -1.4);
+        anesthGroup.add(cartBody);
+
+        // Vaporizer canisters (Sevoflurane yellow, Isoflurane purple)
+        const canister1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 16), new THREE.MeshStandardMaterial({ color: 0xffaa00 }));
+        canister1.position.set(-1.75, 1.2, -1.15);
+        const canister2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 16), new THREE.MeshStandardMaterial({ color: 0x9b51e0 }));
+        canister2.position.set(-1.55, 1.2, -1.15);
+        anesthGroup.add(canister1, canister2);
+        root.add(anesthGroup);
+
+        // IV INFUSION STAND
+        const ivGroup = new THREE.Group();
+        const ivPole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.2, 12), metalMat);
+        ivPole.position.set(-1.1, 1.1, -0.3);
+        ivGroup.add(ivPole);
+
+        // Saline Bag
+        const salineBag = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 0.04), new THREE.MeshStandardMaterial({
+          color: 0x99ddff,
+          transparent: true,
+          opacity: 0.65,
+          roughness: 0.2
+        }));
+        salineBag.position.set(-1.1, 2.05, -0.3);
+        ivGroup.add(salineBag);
+        root.add(ivGroup);
+      },
+
+      tick: function (time) {
+        // Redraw dynamic ECG waveform onto CanvasTexture
+        if (this.ecgCtx && this.screenTexture) {
+          const ctx = this.ecgCtx;
+          const w = 512, h = 256;
+          ctx.fillStyle = '#030c17';
+          ctx.fillRect(0, 0, w, h);
+
+          // Grid lines
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+          ctx.lineWidth = 1;
+          for (let x = 0; x < w; x += 32) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+          }
+          for (let y = 0; y < h; y += 32) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+          }
+
+          // ECG Green Lead II trace
+          ctx.strokeStyle = '#00e699';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = '#00e699';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+
+          const offset = (time * 0.2) % w;
+          for (let x = 0; x < w; x++) {
+            const t = (x + offset) * 0.05;
+            let y = h * 0.35;
+            const cycle = (x + offset) % 120;
+            if (cycle > 50 && cycle < 58) y -= 15;        // P wave
+            else if (cycle >= 58 && cycle < 62) y += 12; // Q dip
+            else if (cycle >= 62 && cycle < 70) y -= 75; // R spike
+            else if (cycle >= 70 && cycle < 74) y += 22; // S dip
+            else if (cycle >= 84 && cycle < 98) y -= 24; // T wave
+
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Vital metrics text
+          ctx.fillStyle = '#00e699';
+          ctx.font = 'bold 36px "DM Mono", monospace';
+          ctx.fillText('HR 72', 20, 60);
+
+          ctx.fillStyle = '#00f0ff';
+          ctx.fillText('SpO2 99%', 220, 60);
+
+          ctx.fillStyle = '#ffaa00';
+          ctx.fillText('BP 120/80', 380, 60);
+
+          this.screenTexture.needsUpdate = true;
+        }
+      }
+    });
+
+    // 4 Other Environments Components
+    AFRAME.registerComponent('holodeck-environment', {
+      init: function () {
+        const root = this.el.object3D;
+        const gridGeo = new THREE.PlaneGeometry(16, 16, 32, 32);
+        const gridMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, opacity: 0.3, transparent: true });
+        const grid = new THREE.Mesh(gridGeo, gridMat);
+        grid.rotation.x = -Math.PI / 2;
+        root.add(grid);
+
+        // Concentric glowing rings
+        for (let r = 1; r <= 4; r++) {
+          const ringGeo = new THREE.RingGeometry(r * 0.8, r * 0.8 + 0.04, 64);
+          const ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide }));
+          ringMesh.rotation.x = -Math.PI / 2;
+          ringMesh.position.y = 0.01;
+          root.add(ringMesh);
+        }
+      }
+    });
+
+    AFRAME.registerComponent('radiology-environment', {
+      init: function () {
+        const root = this.el.object3D;
+        // Large illuminated radiological lightbox panel
+        const lightbox = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x112233 }));
+        lightbox.position.set(0, 2.2, -3.2);
+
+        const screen = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.9), new THREE.MeshBasicMaterial({ color: 0x88ccff }));
+        screen.position.set(0, 0, 0.055);
+        lightbox.add(screen);
+        root.add(lightbox);
+      }
+    });
+
+    AFRAME.registerComponent('pod-environment', {
+      init: function () {
+        const root = this.el.object3D;
+        // Turntable circular specimen isolation pedestal
+        const podPedestal = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.4, 32), new THREE.MeshStandardMaterial({ color: 0x1a2e40, metalness: 0.8 }));
+        podPedestal.position.set(0, 0.2, -0.8);
+        root.add(podPedestal);
+      }
+    });
+
+    AFRAME.registerComponent('theatre-environment', {
+      init: function () {
+        const root = this.el.object3D;
+        // Tiered amphitheatre seating rings in background
+        for (let tier = 1; tier <= 3; tier++) {
+          const tierGeo = new THREE.RingGeometry(3.5 + (tier * 0.9), 4.2 + (tier * 0.9), 32);
+          const tierMesh = new THREE.Mesh(tierGeo, new THREE.MeshStandardMaterial({ color: 0x1e364a, roughness: 0.7 }));
+          tierMesh.rotation.x = -Math.PI / 2;
+          tierMesh.position.set(0, tier * 0.45, -0.8);
+          root.add(tierMesh);
+        }
+      }
+    });
+
+    /* ==========================================================================
+       5. A-FRAME COMPONENT: SURGICAL INSTRUMENTS MAYO TROLLEY
+       ========================================================================== */
+    AFRAME.registerComponent('surgical-instruments-tray', {
+      init: function () {
+        const root = this.el.object3D;
+        this.instruments = {};
+
+        // Stainless steel Mayo tray stand
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x72899b, metalness: 0.9, roughness: 0.2 });
+        const trayMat = new THREE.MeshStandardMaterial({ color: 0x145a66, roughness: 0.6 }); // Blue sterile towel
+
+        const standPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 16), metalMat);
+        standPole.position.y = -0.5;
+        root.add(standPole);
+
+        const trayBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.85), trayMat);
+        root.add(trayBase);
+
+        // Build 8 realistic 3D surgical tools placed on the tray
+        const toolPositions = [
+          { id: 'scalpel', name: 'Scalpel #10', x: -0.18, z: -0.28 },
+          { id: 'scissors', name: 'Metzenbaum Scissors', x: -0.06, z: -0.28 },
+          { id: 'forceps', name: 'DeBakey Forceps', x: 0.06, z: -0.28 },
+          { id: 'retractor', name: 'Weitlaner Retractor', x: 0.18, z: -0.28 },
+          { id: 'needleholder', name: 'Needle Driver', x: -0.18, z: 0.12 },
+          { id: 'clamp', name: 'Kelly Clamp', x: -0.06, z: 0.12 },
+          { id: 'laparoscopic', name: 'Maryland Dissector', x: 0.06, z: 0.12 },
+          { id: 'suction', name: 'Yankauer Suction', x: 0.18, z: 0.12 }
+        ];
+
+        toolPositions.forEach(item => {
+          const toolGroup = this.buildInstrumentModel(item.id);
+          toolGroup.position.set(item.x, 0.03, item.z);
+          toolGroup.userData = { toolId: item.id, ...INSTRUMENT_DATABASE[item.id] };
+          toolGroup.name = item.id;
+          root.add(toolGroup);
+          this.instruments[item.id] = toolGroup;
+        });
+
+        this.bindEvents();
+      },
+
+      buildInstrumentModel: function (id) {
+        const group = new THREE.Group();
+        const steel = new THREE.MeshStandardMaterial({ color: 0xd8e4eb, metalness: 0.95, roughness: 0.15 });
+
+        switch (id) {
+          case 'scalpel': {
+            // Handle No. 3
+            const handle = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.005, 0.16), steel);
+            // Sharp curved blade #10
+            const blade = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.05, 4), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.05 }));
+            blade.position.set(0, 0, -0.095);
+            blade.rotation.x = Math.PI / 2;
+            group.add(handle, blade);
+            break;
+          }
+          case 'scissors': {
+            // Dual scissor shanks with ring handles
+            const shank1 = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.18), steel);
+            shank1.rotation.x = Math.PI / 2;
+            const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.014, 0.003, 8, 16), steel);
+            ring1.position.set(0.015, 0, 0.09);
+            group.add(shank1, ring1);
+            break;
+          }
+          case 'forceps': {
+            // Tweezers spring handle
+            const blade1 = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.003, 0.17), steel);
+            blade1.position.x = -0.005;
+            const blade2 = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.003, 0.17), steel);
+            blade2.position.x = 0.005;
+            group.add(blade1, blade2);
+            break;
+          }
+          case 'retractor': {
+            // Weitlaner curved prongs
+            const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.006, 0.18), steel);
+            const prongs = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.004, 8, 16, Math.PI), steel);
+            prongs.position.set(0, 0, -0.09);
+            group.add(shaft, prongs);
+            break;
+          }
+          case 'needleholder': {
+            const shanks = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.17), steel);
+            shanks.rotation.x = Math.PI / 2;
+            // Curved surgical suture needle
+            const needle = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.002, 6, 16, Math.PI * 0.75), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
+            needle.position.set(0, 0, -0.09);
+            group.add(shanks, needle);
+            break;
+          }
+          case 'clamp': {
+            const clampBody = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.16), steel);
+            clampBody.rotation.x = Math.PI / 2;
+            group.add(clampBody);
+            break;
+          }
+          case 'laparoscopic': {
+            // Long laparoscopic shaft
+            const lapShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.32), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 }));
+            lapShaft.rotation.x = Math.PI / 2;
+            const tip = new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.03, 8), steel);
+            tip.position.set(0, 0, -0.17);
+            tip.rotation.x = -Math.PI / 2;
+            group.add(lapShaft, tip);
+            break;
+          }
+          case 'suction': {
+            // Curved Yankauer chrome suction tube
+            const suctionCurve = new THREE.QuadraticBezierCurve3(
+              new THREE.Vector3(0, 0, 0.12),
+              new THREE.Vector3(0, 0.03, 0),
+              new THREE.Vector3(0, 0.01, -0.14)
+            );
+            const suctionGeo = new THREE.TubeGeometry(suctionCurve, 16, 0.006, 10, false);
+            const suctionMesh = new THREE.Mesh(suctionGeo, steel);
+            group.add(suctionMesh);
+            break;
+          }
+        }
+
+        // Add clickable collision box
+        const hitBox = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.24), new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.userData = { toolId: id };
+        group.add(hitBox);
+
+        return group;
+      },
+
+      bindEvents: function () {
+        this.el.addEventListener('click', evt => {
+          if (evt.detail && evt.detail.intersection) {
+            let obj = evt.detail.intersection.object;
+            while (obj && !obj.userData.toolId && obj.parent) {
+              obj = obj.parent;
+            }
+            if (obj && obj.userData.toolId) {
+              selectInstrument(obj.userData.toolId);
+            }
+          }
+        });
+      }
+    });
+
+    /* ==========================================================================
+       6. A-FRAME COMPONENT: META QUEST 3S CONTROLLER INTERACTION & HAPTICS
+       ========================================================================== */
+    AFRAME.registerComponent('quest-controller-interaction', {
+      schema: {
+        hand: { type: 'string', default: 'right' }
+      },
+
+      init: function () {
+        this.el.addEventListener('triggerdown', this.onTriggerDown.bind(this));
+        this.el.addEventListener('gripdown', this.onGripDown.bind(this));
+        this.el.addEventListener('gripup', this.onGripUp.bind(this));
+        this.el.addEventListener('abuttondown', this.onActionButton.bind(this));
+        this.el.addEventListener('xbuttondown', this.onActionButton.bind(this));
+        this.el.addEventListener('bbuttondown', this.onMenuButton.bind(this));
+        this.el.addEventListener('ybuttondown', this.onMenuButton.bind(this));
+      },
+
+      triggerHapticPulse: function (intensity = 0.5, duration = 80) {
+        const controller = this.el.components['oculus-touch-controls'];
+        if (controller && controller.controller) {
+          const gamepad = controller.controller.gamepad;
+          if (gamepad && gamepad.hapticActuators && gamepad.hapticActuators[0]) {
+            gamepad.hapticActuators[0].pulse(intensity, duration);
+          }
+        }
+      },
+
+      onTriggerDown: function () {
+        this.triggerHapticPulse(0.4, 60);
+        audio.playUiClick();
+      },
+
+      onGripDown: function () {
+        this.triggerHapticPulse(0.8, 120);
+        audio.playGrabTool();
+        showToast(`Quest 3S [${this.data.hand.toUpperCase()}]: Tool Grabbed`);
+      },
+
+      onGripUp: function () {
+        this.triggerHapticPulse(0.2, 40);
+      },
+
+      onActionButton: function () {
+        this.triggerHapticPulse(0.5, 70);
+        executeProcedureStep();
+      },
+
+      onMenuButton: function () {
+        this.triggerHapticPulse(0.3, 50);
+        // Toggle VR floating menu visibility
+        const vrTablet = document.getElementById('vrTabletAnchor');
+        if (vrTablet) {
+          vrTablet.setAttribute('visible', !vrTablet.getAttribute('visible'));
+        }
+      }
+    });
+
+    /* ==========================================================================
+       7. UI INTERACTION CONTROLLER & APPLICATION STATE
+       ========================================================================== */
+    const appState = {
+      activeTab: 'anatomy',
+      activeOrgan: 'heart',
+      activeEnvironment: 'or',
+      activeModule: 'cabg',
+      activeModuleStep: 1,
+      activeTool: 'scalpel',
+      skinOpacity: 0.45,
+      layers: {
+        skin: true,
+        muscle: true,
+        skeleton: true,
+        organs: true,
+        vascular: true,
+        nervous: true
+      },
+      quizIndex: 0,
+      quizScore: 0,
+      xp: 350,
+      sessionSeconds: 0
+    };
+
+    // UI Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        appState.activeTab = tab;
+
+        document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+        const target = document.getElementById(`tab-${tab}`);
+        if (target) target.style.display = 'block';
+
+        audio.playUiClick();
+      });
+    });
+
+    // Layer Toggles
+    document.querySelectorAll('.layer-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const layer = btn.dataset.layer;
+        appState.layers[layer] = !appState.layers[layer];
+        btn.classList.toggle('active', appState.layers[layer]);
+
+        const anatomyComp = document.getElementById('anatomyRoot').components['human-anatomy-system'];
+        if (anatomyComp) {
+          anatomyComp.setLayerVisibility(layer, appState.layers[layer]);
+        }
+        audio.playUiClick();
+        showToast(`${layer.toUpperCase()} layer: ${appState.layers[layer] ? 'ENABLED' : 'HIDDEN'}`);
+      });
+    });
+
+    // Skin Opacity Slider
+    const sliderOpacity = document.getElementById('sliderSkinOpacity');
+    const labelOpacity = document.getElementById('labelSkinOpacity');
+    sliderOpacity.addEventListener('input', e => {
+      const val = parseInt(e.target.value) / 100;
+      appState.skinOpacity = val;
+      labelOpacity.textContent = `${e.target.value}%`;
+
+      const anatomyComp = document.getElementById('anatomyRoot').components['human-anatomy-system'];
+      if (anatomyComp) {
+        anatomyComp.setSkinOpacity(val);
+      }
+    });
+
+    // Organ Chip Clicks
+    document.querySelectorAll('.organ-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.organ-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const organId = chip.dataset.organ;
+        const anatomyComp = document.getElementById('anatomyRoot').components['human-anatomy-system'];
+        if (anatomyComp) {
+          anatomyComp.selectOrgan(organId);
+        }
+      });
+    });
+
+    function updateInspectorWithOrgan(organId) {
+      const data = ANATOMY_DATABASE[organId];
+      if (!data) return;
+
+      document.getElementById('inspectorTitle').textContent = data.name;
+      document.getElementById('inspectorCategory').textContent = data.system;
+      document.getElementById('inspectorLocation').textContent = data.location;
+      document.getElementById('inspectorFunction').textContent = data.function;
+      document.getElementById('inspectorRelations').textContent = data.relations;
+      document.getElementById('inspectorPearl').textContent = data.clinicalNotes;
+    }
+
+    // Environment Switcher
+    document.querySelectorAll('.env-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.env-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const envKey = card.dataset.env;
+        switchEnvironment(envKey);
+      });
+    });
+
+    function switchEnvironment(envKey) {
+      appState.activeEnvironment = envKey;
+      const envMap = {
+        or: 'environmentOR',
+        holodeck: 'environmentHolodeck',
+        radiology: 'environmentRadiology',
+        pod: 'environmentPod',
+        theatre: 'environmentTheatre'
+      };
+
+      Object.entries(envMap).forEach(([k, id]) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('visible', k === envKey);
+      });
+
+      audio.playUiClick();
+      showToast(`Environment changed: ${envKey.toUpperCase()}`);
+
+      const vrText = document.getElementById('vrTabletStatusText');
+      if (vrText) vrText.setAttribute('value', `Active: ${envKey.toUpperCase()}`);
+    }
+
+    // Surgical Instrument Selection
+    function selectInstrument(toolId) {
+      const data = INSTRUMENT_DATABASE[toolId];
+      if (!data) return;
+
+      document.querySelectorAll('.tool-select-item').forEach(el => {
+        el.style.borderColor = el.dataset.tool === toolId ? 'var(--cyan)' : 'var(--border-subtle)';
+      });
+
+      document.getElementById('inspectorTitle').textContent = data.name;
+      document.getElementById('inspectorCategory').textContent = data.type;
+      document.getElementById('inspectorLocation').textContent = `Clinical Purpose: ${data.purpose}`;
+      document.getElementById('inspectorFunction').textContent = `Handling Pearls: ${data.handling}`;
+      document.getElementById('inspectorRelations').textContent = "Mayo Stand Tray Slot Position #1";
+      document.getElementById('inspectorPearl').textContent = `Safety Precaution: ${data.safety}`;
+
+      audio.playGrabTool();
+      showToast(`Inspecting instrument: ${data.name}`);
+    }
+
+    document.querySelectorAll('.tool-select-item').forEach(item => {
+      item.addEventListener('click', () => {
+        selectInstrument(item.dataset.tool);
+      });
+    });
+
+    // Surgical Module Step Execution
+    document.querySelectorAll('.module-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.module-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        appState.activeModule = card.dataset.module;
+        appState.activeModuleStep = 1;
+        updateSurgicalModuleUI();
+      });
+    });
+
+    function updateSurgicalModuleUI() {
+      const mod = SURGERY_MODULES[appState.activeModule];
+      if (!mod) return;
+
+      const step = mod.steps[appState.activeModuleStep - 1];
+      document.getElementById('inspectorTitle').textContent = `${mod.name} (Step ${step.num}/5)`;
+      document.getElementById('inspectorCategory').textContent = mod.specialty;
+      document.getElementById('inspectorLocation').textContent = `Target Anatomy: ${step.title}`;
+      document.getElementById('inspectorFunction').textContent = step.desc;
+      document.getElementById('inspectorRelations').textContent = "Required: Scalpel #10, DeBakey Forceps, Metzenbaum Scissors";
+      document.getElementById('inspectorPearl').textContent = "Verify sterile margins and anatomical landmarks before initiating tissue division.";
+
+      audio.playUiClick();
+    }
+
+    function executeProcedureStep() {
+      const mod = SURGERY_MODULES[appState.activeModule];
+      if (!mod) return;
+
+      audio.playSurgicalAction();
+      appState.xp += 50;
+      updateXpDashboard();
+
+      if (appState.activeModuleStep < 5) {
+        appState.activeModuleStep++;
+        updateSurgicalModuleUI();
+        showToast(`Step Completed! Proceeding to Step ${appState.activeModuleStep}`);
+      } else {
+        showToast(`Procedure Complete: ${mod.name}! +150 XP Bonus`);
+        appState.xp += 100;
+        updateXpDashboard();
+      }
+    }
+
+    // View Presets
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.dataset.preset;
+        const root = document.getElementById('anatomyRoot');
+        if (!root) return;
+
+        switch (preset) {
+          case 'front':
+            root.setAttribute('rotation', '0 0 0');
+            break;
+          case 'side':
+            root.setAttribute('rotation', '0 90 0');
+            break;
+          case 'cardiac':
+            root.setAttribute('rotation', '0 25 0');
+            root.setAttribute('position', '0 1.15 -0.5');
+            break;
+          case 'cranial':
+            root.setAttribute('rotation', '20 0 0');
+            root.setAttribute('position', '0 0.85 -0.5');
+            break;
+          case 'reset':
+            root.setAttribute('rotation', '0 0 0');
+            root.setAttribute('position', '0 1.05 -0.8');
+            break;
+        }
+        audio.playUiClick();
+        showToast(`View preset: ${preset.toUpperCase()}`);
+      });
+    });
+
+    // Inspector Action Buttons
+    document.getElementById('btnFocusStructure').addEventListener('click', () => {
+      const root = document.getElementById('anatomyRoot');
+      root.setAttribute('position', '0 1.15 -0.5');
+      showToast('Centered on anatomical structure');
+    });
+
+    document.getElementById('btnIsolateStructure').addEventListener('click', () => {
+      switchEnvironment('pod');
+      document.querySelectorAll('.env-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.env === 'pod');
+      });
+      showToast('Isolated in Specimen Pod');
+    });
+
+    document.getElementById('btnResetToolPos').addEventListener('click', () => {
+      const trayComp = document.getElementById('mayoStandGroup').components['surgical-instruments-tray'];
+      if (trayComp && trayComp.instruments) {
+        Object.values(trayComp.instruments).forEach(grp => {
+          grp.position.y = 0.03;
+          grp.rotation.y = 0;
+        });
+        showToast('Instrument returned to sterile tray');
+        audio.playUiClick();
+      }
+    });
+
+    // Enter VR / WebXR session toggle
+    const btnEnterVR = document.getElementById('btnEnterVR');
+    const sceneEl = document.querySelector('a-scene');
+    if (btnEnterVR && sceneEl) {
+      btnEnterVR.addEventListener('click', () => {
+        if (sceneEl.is('vr-mode')) {
+          sceneEl.exitVR();
+        } else {
+          sceneEl.enterVR();
+        }
+      });
+
+      sceneEl.addEventListener('enter-vr', () => {
+        const statusText = document.getElementById('vrStatusText');
+        if (statusText) statusText.textContent = 'EXIT VR';
+        showToast('Meta Quest 3S WebXR Session Active');
+      });
+
+      sceneEl.addEventListener('exit-vr', () => {
+        const statusText = document.getElementById('vrStatusText');
+        if (statusText) statusText.textContent = 'ENTER VR';
+        showToast('Returned to Desktop Preview Mode');
+      });
+    }
+
+    // Audio Narration (Web Speech Synthesis)
+    document.getElementById('btnAudioNarrate').addEventListener('click', () => {
+      const text = `${document.getElementById('inspectorTitle').textContent}. ${document.getElementById('inspectorFunction').textContent} ${document.getElementById('inspectorPearl').textContent}`;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+        showToast('Narrating anatomical guidance...');
+      } else {
+        showToast('Speech synthesis not supported in this browser');
+      }
+    });
+
+    // AI Medical Learning Assistant Chat
+    const chatInput = document.getElementById('chatInput');
+    const btnSendChat = document.getElementById('btnSendChat');
+    const chatMessages = document.getElementById('chatMessages');
+
+    function sendAiQuery(queryText) {
+      if (!queryText || queryText.trim() === '') return;
+
+      // User bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = 'msg-bubble msg-user';
+      userBubble.textContent = queryText;
+      chatMessages.appendChild(userBubble);
+
+      chatInput.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      // Generate medical AI response
+      setTimeout(() => {
+        const reply = generateAiMedicalResponse(queryText);
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'msg-bubble msg-ai';
+        aiBubble.innerHTML = `<strong>Dr. AI-Surg:</strong> ${reply}`;
+        chatMessages.appendChild(aiBubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        audio.playUiClick();
+      }, 500);
+    }
+
+    btnSendChat.addEventListener('click', () => sendAiQuery(chatInput.value));
+    chatInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') sendAiQuery(chatInput.value);
+    });
+
+    document.querySelectorAll('.chip-prompt').forEach(chip => {
+      chip.addEventListener('click', () => {
+        sendAiQuery(chip.dataset.query);
+      });
+    });
+
+    function generateAiMedicalResponse(query) {
+      const q = query.toLowerCase();
+      if (q.includes('cabg') || q.includes('bypass') || q.includes('cardiac')) {
+        return "Coronary Artery Bypass Grafting (CABG) revascularizes stenotic coronary vessels. The Left Internal Mammary Artery (LIMA) to Left Anterior Descending (LAD) graft provides superior patency due to nitric oxide production from its endothelium. Saphenous vein grafts are harvested for secondary targets.";
+      } else if (q.includes('scissor') || q.includes('metzenbaum') || q.includes('mayo')) {
+        return "Metzenbaum scissors have longer shanks and finer, curved blades designed specifically for blunt and sharp dissection of delicate soft tissue and visceral fat planes. In contrast, heavy Mayo scissors are reserved for cutting thick fascia, tendons, or surgical suture.";
+      } else if (q.includes('abdominal') || q.includes('wall') || q.includes('layers')) {
+        return "From superficial to deep, the anterior abdominal wall layers are: 1) Skin, 2) Camper's fatty fascia, 3) Scarpa's membranous fascia, 4) External oblique, 5) Internal oblique, 6) Transversus abdominis, 7) Transversalis fascia, 8) Preperitoneal fat, and 9) Parietal peritoneum.";
+      } else if (q.includes('spleen') || q.includes('splenic')) {
+        return "The spleen is the largest lymphoid organ. Its red pulp filters aged erythrocytes and culls intraerythrocytic inclusions, while its white pulp mounts humoral and cell-mediated responses against encapsulated bacteria (Pneumococcus, Meningococcus, H. influenzae).";
+      } else if (q.includes('pressure') || q.includes('laparoscop') || q.includes('pneumoperitoneum')) {
+        return "Standard adult laparoscopic insufflation pressure is maintained between 12 and 15 mmHg. Pressures exceeding 15-20 mmHg diminish inferior vena caval return, reduce cardiac output, elevate peak airway pressures, and increase deep vein thrombosis risk.";
+      } else {
+        return `Regarding "${query}": In surgical pathology and clinical practice, meticulous anatomical dissection along embryonic fascial planes minimizes blood loss, prevents nerve injury, and optimizes postoperative patient recovery. Always verify the WHO Surgical Safety Checklist before incision.`;
+      }
+    }
+
+    // ANATOMY & SURGERY QUIZ LOGIC
+    function loadQuizQuestion() {
+      const q = QUIZ_QUESTIONS[appState.quizIndex];
+      if (!q) return;
+
+      document.getElementById('quizQuestion').textContent = `Q${appState.quizIndex + 1}: ${q.question}`;
+      const optionsContainer = document.getElementById('quizOptions');
+      optionsContainer.innerHTML = '';
+
+      document.getElementById('quizExplanation').style.display = 'none';
+      document.getElementById('btnNextQuiz').style.display = 'none';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => handleQuizAnswer(idx, btn));
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('quizScoreText').textContent = `SCORE: ${appState.quizScore}/${QUIZ_QUESTIONS.length}`;
+    }
+
+    function handleQuizAnswer(selectedIdx, buttonEl) {
+      const q = QUIZ_QUESTIONS[appState.quizIndex];
+      const buttons = document.querySelectorAll('.quiz-option-btn');
+      buttons.forEach(b => b.style.pointerEvents = 'none');
+
+      if (selectedIdx === q.answer) {
+        buttonEl.classList.add('correct');
+        appState.quizScore++;
+        appState.xp += 100;
+        updateXpDashboard();
+        audio.playTone(880, 'sine', 0.15, 0.08);
+      } else {
+        buttonEl.classList.add('wrong');
+        buttons[q.answer].classList.add('correct');
+        audio.playTone(220, 'sawtooth', 0.2, 0.08);
+      }
+
+      document.getElementById('quizScoreText').textContent = `SCORE: ${appState.quizScore}/${QUIZ_QUESTIONS.length}`;
+      document.getElementById('quizExplanationText').textContent = q.explanation;
+      document.getElementById('quizExplanation').style.display = 'block';
+      document.getElementById('btnNextQuiz').style.display = 'block';
+    }
+
+    document.getElementById('btnNextQuiz').addEventListener('click', () => {
+      appState.quizIndex = (appState.quizIndex + 1) % QUIZ_QUESTIONS.length;
+      loadQuizQuestion();
+    });
+
+    loadQuizQuestion();
+
+    // XP Dashboard & Surgical Ranks
+    function updateXpDashboard() {
+      document.getElementById('userXpText').textContent = `${appState.xp} XP`;
+      let rank = "Medical Student";
+      let progress = 20;
+
+      if (appState.xp >= 1500) {
+        rank = "Attending Surgeon";
+        progress = 100;
+      } else if (appState.xp >= 900) {
+        rank = "Chief Surgical Fellow";
+        progress = 80;
+      } else if (appState.xp >= 500) {
+        rank = "Senior Surgical Resident";
+        progress = 60;
+      } else if (appState.xp >= 200) {
+        rank = "Junior Surgical Resident";
+        progress = 40;
+      }
+
+      document.getElementById('userRankText').textContent = rank;
+      document.getElementById('xpProgressBar').style.width = `${progress}%`;
+      document.getElementById('certScore').textContent = `${Math.min(100, Math.floor((appState.xp / 1200) * 100))}% Competence`;
+    }
+
+    // Modal Triggers
+    document.getElementById('btnHelp').addEventListener('click', () => {
+      document.getElementById('modalGuide').classList.add('open');
+      audio.playUiClick();
+    });
+
+    document.getElementById('btnDisclaimer').addEventListener('click', () => {
+      document.getElementById('modalDisclaimer').classList.add('open');
+      audio.playUiClick();
+    });
+
+    document.getElementById('btnOpenCertificate').addEventListener('click', () => {
+      document.getElementById('certDate').textContent = new Date().toLocaleDateString();
+      document.getElementById('modalCertificate').classList.add('open');
+      audio.playUiClick();
+    });
+
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.close;
+        const target = document.getElementById(id);
+        if (target) target.classList.remove('open');
+        audio.playUiClick();
+      });
+    });
+
+    // In-VR Tablet 3D Button Clicks
+    const setupVrTabletButtons = () => {
+      const vrBtnAnatomy = document.getElementById('vrBtnAnatomy');
+      const vrBtnOR = document.getElementById('vrBtnOR');
+      const vrBtnSurgery = document.getElementById('vrBtnSurgery');
+      const vrBtnXRay = document.getElementById('vrBtnXRay');
+      const vrBtnReset = document.getElementById('vrBtnReset');
+
+      if (vrBtnAnatomy) {
+        vrBtnAnatomy.addEventListener('click', () => {
+          switchEnvironment('holodeck');
+          showToast('VR: Switched to Anatomy Chamber');
+        });
+      }
+      if (vrBtnOR) {
+        vrBtnOR.addEventListener('click', () => {
+          switchEnvironment('or');
+          showToast('VR: Switched to Operating Room');
+        });
+      }
+      if (vrBtnSurgery) {
+        vrBtnSurgery.addEventListener('click', () => {
+          executeProcedureStep();
+        });
+      }
+      if (vrBtnXRay) {
+        vrBtnXRay.addEventListener('click', () => {
+          const newOp = appState.skinOpacity > 0.2 ? 0.05 : 0.45;
+          appState.skinOpacity = newOp;
+          const comp = document.getElementById('anatomyRoot').components['human-anatomy-system'];
+          if (comp) comp.setSkinOpacity(newOp);
+          sliderOpacity.value = Math.floor(newOp * 100);
+          labelOpacity.textContent = `${sliderOpacity.value}%`;
+          showToast(`VR: X-Ray ${newOp < 0.2 ? 'ACTIVATED' : 'OFF'}`);
+        });
+      }
+      if (vrBtnReset) {
+        vrBtnReset.addEventListener('click', () => {
+          const root = document.getElementById('anatomyRoot');
+          root.setAttribute('rotation', '0 0 0');
+          root.setAttribute('position', '0 1.05 -0.8');
+          showToast('VR: Model Orientation Reset');
+        });
+      }
+    };
+
+    window.addEventListener('load', setupVrTabletButtons);
+
+    // Audio Mute Toggle
+    const btnSound = document.getElementById('btnSoundToggle');
+    btnSound.addEventListener('click', () => {
+      const isMuted = audio.toggleMute();
+      btnSound.style.color = isMuted ? 'var(--coral)' : 'var(--text-secondary)';
+      showToast(isMuted ? 'Clinical audio muted' : 'Clinical audio active');
+    });
+
+    // Toast Notification Utility
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notification');
+      const toastMsg = document.getElementById('toastMsg');
+      if (!toast || !toastMsg) return;
+
+      toastMsg.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    // Mini ECG Waveform Animation in Top Telemetry Bar
+    const miniCanvas = document.getElementById('ecg-canvas-mini');
+    const miniCtx = miniCanvas ? miniCanvas.getContext('2d') : null;
+    let miniOffset = 0;
+
+    function renderMiniEcg() {
+      if (miniCtx) {
+        const w = miniCanvas.width;
+        const h = miniCanvas.height;
+        miniCtx.fillStyle = '#040e19';
+        miniCtx.fillRect(0, 0, w, h);
+
+        miniCtx.strokeStyle = '#00e699';
+        miniCtx.lineWidth = 1.5;
+        miniCtx.beginPath();
+
+        for (let x = 0; x < w; x++) {
+          const cycle = (x + miniOffset) % 60;
+          let y = h / 2;
+          if (cycle >= 28 && cycle < 31) y -= 4;   // P
+          else if (cycle >= 31 && cycle < 33) y += 2; // Q
+          else if (cycle >= 33 && cycle < 37) y -= 10;// R spike
+          else if (cycle >= 37 && cycle < 39) y += 3; // S
+          else if (cycle >= 44 && cycle < 50) y -= 5; // T
+
+          if (x === 0) miniCtx.moveTo(x, y);
+          else miniCtx.lineTo(x, y);
+        }
+        miniCtx.stroke();
+        miniOffset = (miniOffset + 1.2) % 60;
+      }
+      requestAnimationFrame(renderMiniEcg);
+    }
+    requestAnimationFrame(renderMiniEcg);
+
+    // Simulation Clock
+    setInterval(() => {
+      appState.sessionSeconds++;
+      const m = String(Math.floor(appState.sessionSeconds / 60)).padStart(2, '0');
+      const s = String(appState.sessionSeconds % 60).padStart(2, '0');
+      const timeStr = `${m}:${s}`;
+      const el = document.getElementById('telemetryTime');
+      if (el) el.textContent = timeStr;
+    }, 1000);
+
+    // Initial organ selection
+    updateInspectorWithOrgan('heart');
+  </script>
+</body>
+</html>
